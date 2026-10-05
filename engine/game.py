@@ -313,7 +313,7 @@ def simulate_society(state):
 
         if name == "Business":
 
-            if m["tax_burden"] if "tax_burden" in m else False:
+            if m["debt"] > 80:
                 group["approval"] -= 0.2
 
         if name == "Workers":
