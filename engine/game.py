@@ -1,185 +1,34 @@
-import random
+import copy
+from engine.events import trigger_era_event
 
-from .eras import get_era
-from .politics import (
-    create_parties,
-    create_leaders,
-    create_regions,
-    create_institutions,
-    simulate_party_politics,
-    calculate_coalition_stability,
-    parliament_status
-)
-from .economy import simulate_economy
-from .events import generate_event, INTERACTIVE_EVENTS
-
-
-def clamp(value, minimum=0, maximum=100):
-    return max(
-        minimum,
-        min(maximum, value)
-    )
-
-
-def create_social_groups():
-    return {
-        "Workers": {
-            "population": 20,
-            "approval": 55,
-            "wealth": 40,
-            "radicalism": 20
-        },
-        "Farmers": {
-            "population": 20,
-            "approval": 55,
-            "wealth": 40,
-            "radicalism": 15
-        },
-        "Business": {
-            "population": 12,
-            "approval": 55,
-            "wealth": 75,
-            "radicalism": 10
-        },
-        "Middle Class": {
-            "population": 18,
-            "approval": 55,
-            "wealth": 60,
-            "radicalism": 15
-        },
-        "Elite": {
-            "population": 5,
-            "approval": 60,
-            "wealth": 95,
-            "radicalism": 10
-        },
-        "Youth": {
-            "population": 15,
-            "approval": 50,
-            "wealth": 40,
-            "radicalism": 25
-        }
+POLICIES = {
+    "Austerity Measures": {
+        "description": "Cut public spending to lower national debt, at the cost of public approval.",
+        "effects": {"debt": -5.0, "public_support": -6.0, "government_stability": -2.0}
+    },
+    "Infrastructure Stimulus": {
+        "description": "Fund large-scale public works to boost economic growth and employment.",
+        "effects": {"gdp": 4.0, "unemployment": -1.5, "debt": 4.0, "inflation": 1.0}
+    },
+    "Military Buildup": {
+        "description": "Increase defense spending to elevate military readiness and national power projection.",
+        "effects": {"military_readiness": 8.0, "debt": 3.0, "international_tension": 2.0}
+    },
+    "Price Controls": {
+        "description": "Legislate strict price ceilings on essential commodities to curb runaway inflation.",
+        "effects": {"inflation": -3.5, "public_support": 3.0, "gdp": -1.0}
     }
-
-
-def create_rivals(era_name):
-    """Generates dynamic neighboring rival nations based on the era."""
-    is_ancient_medieval = "Ancient" in era_name or "Medieval" in era_name
-    return [
-        {
-            "name": "Empire of Oakhaven" if is_ancient_medieval else "Federal Republic of Vandalia",
-            "relation": -30,
-            "military_power": 60,
-            "stance": "Hostile",
-            "border_dispute": True
-        },
-        {
-            "name": "Kingdom of Solaria" if is_ancient_medieval else "The Commonwealth",
-            "relation": 10,
-            "military_power": 45,
-            "stance": "Neutral",
-            "border_dispute": False
-        }
-    ]
-
-
-def create_metrics():
-    return {
-        "gdp": 100,
-        "growth": 2.5,
-        "inflation": 2.4,
-        "unemployment": 5,
-        "debt": 45,
-        "deficit": 3,
-        "wages": 100,
-        "interest_rate": 3,
-        "currency_strength": 70,
-        "trade_balance": 2,
-        "fdi": 50,
-        "reserves": 100,
-        "legitimacy": 60,
-        "public_support": 55,
-        "government_stability": 65,
-        "institutional_stability": 65,
-        "protest_risk": 20,
-        "election_risk": 20,
-        "diplomacy": 55,
-        "military_readiness": 50,
-        "trade_openness": 50,
-        "international_tension": 20
-    }
-
+}
 
 def create_game(
-    country_name,
-    year,
-    historical_mode,
-    government,
-    government_config,
-    economy,
-    territory,
-    ideology,
-    technology,
-    society,
-    foreign_position,
-    scenario,
-    crisis,
-    leader
+    country_name, year, historical_mode, selected_gov, government_config,
+    economy, territory, ideology, technology, society, foreign_position,
+    scenario, crisis, leader
 ):
-    era, period = get_era(year)
-    metrics = create_metrics()
-
-    state = {
-        "year": year,
-        "turn": 1,
-        "metrics": metrics,
-        "groups": create_social_groups(),
-        "parties": create_parties(year),
-        "leaders": create_leaders(year),
-        "regions": create_regions(),
-        "institutions": create_institutions(),
-        "rivals": create_rivals(era),
-        "active_dilemma": None,
-        "situations": [
-            scenario,
-            crisis
-        ],
-        "events": [],
-        "history": [],
-        "pending_effects": []
-    }
-
-    government_id = government["id"]
-    if government_id == "absolute_monarchy":
-        metrics["government_stability"] += 10
-        metrics["institutional_stability"] -= 5
-    elif government_id == "military_government":
-        metrics["military_readiness"] += 15
-        metrics["legitimacy"] -= 10
-    elif government_id == "one_party":
-        metrics["government_stability"] += 8
-        metrics["institutional_stability"] += 3
-    elif government_id == "personalist":
-        metrics["government_stability"] += 5
-        metrics["institutional_stability"] -= 8
-    elif government_id == "parliamentary_republic":
-        metrics["institutional_stability"] += 5
-    elif government_id == "constitutional_monarchy":
-        metrics["institutional_stability"] += 5
-
-    state["history"].append({
-        "year": year,
-        **metrics
-    })
-
     return {
         "country_name": country_name,
         "leader": leader,
-        "year": year,
-        "era": era,
-        "period": period,
-        "historical_mode": historical_mode,
-        "government": government,
+        "government": selected_gov,
         "government_config": government_config,
         "economy": economy,
         "territory": territory,
@@ -189,298 +38,104 @@ def create_game(
         "foreign_position": foreign_position,
         "scenario": scenario,
         "crisis": crisis,
-        "state": state
+        "historical_mode": historical_mode,
+        "state": {
+            "turn": 1,
+            "year": year,
+            "month": 1,
+            "day": 1,
+            "metrics": {
+                "gdp": 100.0,
+                "growth": 2.5,
+                "inflation": 2.4,
+                "unemployment": 5.0,
+                "debt": 45.0,
+                "government_stability": 75.0,
+                "public_support": 55.0,
+                "legitimacy": 60.0,
+                "interest_rate": 4.0,
+                "currency_strength": 100.0,
+                "fdi": 10.0,
+                "reserves": 20.0,
+                "diplomacy": 50.0,
+                "trade_openness": 50.0,
+                "military_readiness": 50.0,
+                "international_tension": 20.0
+            },
+            "groups": {
+                "Elites": {"approval": 70, "wealth_share": 40, "radicalization": 10},
+                "Middle Class": {"approval": 60, "wealth_share": 35, "radicalization": 15},
+                "Working Class": {"approval": 50, "wealth_share": 25, "radicalization": 25}
+            },
+            "parties": {
+                "Ruling Party": {"seats": 55, "loyalty": 80},
+                "Opposition": {"seats": 45, "loyalty": 40}
+            },
+            "regions": {
+                "Capital Region": {"stability": 80, "unrest": 10, "wealth": 50},
+                "Periphery": {"stability": 60, "unrest": 30, "wealth": 20}
+            },
+            "rivals": [
+                {"name": "Neighboring Empire", "relation": "Neutral", "tension": 30}
+            ],
+            "situations": [crisis],
+            "events": [
+                {
+                    "year": year,
+                    "title": "Founding of the Nation",
+                    "description": f"{country_name} has emerged onto the world stage under the rule of {leader}."
+                }
+            ],
+            "history": [
+                {
+                    "year": year,
+                    "gdp": 100.0,
+                    "debt": 45.0,
+                    "inflation": 2.4,
+                    "unemployment": 5.0,
+                    "stability": 75.0
+                }
+            ],
+            "active_dilemma": None
+        }
     }
-
-
-# ==========================================================
-# SOCIAL SYSTEM (FACTIONAL STRUGGLE)
-# ==========================================================
-
-def calculate_public_support(state):
-    groups = state["groups"]
-    total = sum(group["population"] for group in groups.values())
-    if total == 0:
-        return 0
-    return sum(
-        group["population"] * group["approval"]
-        for group in groups.values()
-    ) / total
-
-
-def simulate_society(state):
-    m = state["metrics"]
-    groups = state["groups"]
-
-    inflation_pressure = max(0, m["inflation"] - 3)
-    unemployment_pressure = max(0, m["unemployment"] - 6)
-
-    for name, group in groups.items():
-        group["approval"] -= (inflation_pressure * 0.15)
-        group["approval"] -= (unemployment_pressure * 0.10)
-
-        # Faction-specific pressures
-        if name == "Business" and m["debt"] > 80:
-            group["approval"] -= 0.5
-            group["radicalism"] += 0.2
-        if name == "Workers" and m["inflation"] > 5:
-            group["radicalism"] += 0.4
-        if name == "Youth" and m["government_stability"] < 45:
-            group["radicalism"] += 0.6
-
-        # Radicalism feedback loop: high radicalism lowers approval and boosts protest risk
-        if group["radicalism"] > 60:
-            group["approval"] -= 1.0
-            m["protest_risk"] += 0.5
-
-        group["approval"] += random.uniform(-0.5, 0.5)
-        group["approval"] = clamp(group["approval"])
-        group["radicalism"] = clamp(group["radicalism"])
-
-
-# ==========================================================
-# POLITICAL & INSTITUTIONAL SYSTEMS
-# ==========================================================
-
-def simulate_politics(state):
-    m = state["metrics"]
-    parties = state["parties"]
-
-    support = calculate_public_support(state)
-    m["public_support"] = (support * 0.70) + (m["public_support"] * 0.30)
-
-    simulate_party_politics(state, m["inflation"], m["unemployment"])
-    coalition_stability = calculate_coalition_stability(state)
-
-    m["government_stability"] = (
-        m["legitimacy"] * 0.20 +
-        m["public_support"] * 0.25 +
-        coalition_stability * 0.20 +
-        m["institutional_stability"] * 0.20 +
-        state["institutions"]["state_capacity"] * 0.15
-    )
-
-    if m["government_stability"] < 45:
-        m["election_risk"] += 3
-    if m["government_stability"] < 35:
-        m["legitimacy"] -= 2
-
-    state["parliament_status"] = parliament_status(parties)
-
-
-def simulate_institutions(state):
-    institutions = state["institutions"]
-    m = state["metrics"]
-
-    if institutions["state_capacity"] < 40:
-        m["government_stability"] -= 1
-    if institutions["corruption"] > 60:
-        institutions["tax_capacity"] -= 0.3
-        m["fdi"] -= 0.3
-    if m["government_stability"] > 70:
-        institutions["administrative_capacity"] += 0.2
-        institutions["bureaucratic_quality"] += 0.2
-
-    for key in institutions:
-        institutions[key] = clamp(institutions[key])
-
-
-def simulate_regions(state):
-    regions = state["regions"]
-    m = state["metrics"]
-
-    for region in regions.values():
-        if m["unemployment"] > 8:
-            region["unrest"] += 0.4
-        if m["inflation"] > 6:
-            region["unrest"] += 0.3
-        if m["growth"] > 4:
-            region["government_support"] += 0.2
-        region["unrest"] = clamp(region["unrest"])
-        region["government_support"] = clamp(region["government_support"])
-
-
-# ==========================================================
-# DYNAMIC RIVAL NATIONS & FOREIGN AFFAIRS
-# ==========================================================
-
-def simulate_foreign_affairs(state):
-    m = state["metrics"]
-    rivals = state.get("rivals", [])
-
-    m["international_tension"] += random.uniform(-1, 1)
-
-    for rival in rivals:
-        # High international tension degrades relations
-        if m["international_tension"] > 60:
-            rival["relation"] -= 1.5
-
-        # Hostile rivals with deep grievances meddle in domestic affairs
-        if rival["stance"] == "Hostile" and rival["relation"] < -40:
-            m["military_readiness"] -= 0.2
-            # Meddling increases worker/youth radicalism
-            if "Workers" in state["groups"]:
-                state["groups"]["Workers"]["radicalism"] += 0.3
-
-    if m["international_tension"] > 70:
-        m["military_readiness"] -= 0.5
-        m["diplomacy"] -= 1
-
-
-# ==========================================================
-# DELAYED EFFECTS
-# ==========================================================
-
-def process_pending_effects(state):
-    remaining = []
-    metrics = state["metrics"]
-
-    for effect in state["pending_effects"]:
-        effect["turns"] -= 1
-        if effect["turns"] <= 0:
-            for key, value in effect["effects"].items():
-                if key in metrics:
-                    metrics[key] += value
-        else:
-            remaining.append(effect)
-    state["pending_effects"] = remaining
-
-
-# ==========================================================
-# EXPANDED STRATEGIC POLICIES WITH FACTION IMPACTS
-# ==========================================================
-
-POLICIES = {
-    "Economic Stimulus": {
-        "immediate": {"growth": 0.8, "inflation": 0.4, "public_support": 3},
-        "delayed": {"turns": 2, "effects": {"debt": 2, "deficit": 1}},
-        "group_impact": {"Workers": +4, "Business": +3}
-    },
-    "Fiscal Austerity": {
-        "immediate": {"growth": -0.5, "public_support": -4, "government_stability": -2},
-        "delayed": {"turns": 2, "effects": {"debt": -3, "deficit": -2}},
-        "group_impact": {"Workers": -8, "Middle Class": -6, "Business": +4}
-    },
-    "Tax Cuts": {
-        "immediate": {"growth": 0.4, "public_support": 1},
-        "delayed": {"turns": 1, "effects": {"debt": 1.5, "deficit": 1}},
-        "group_impact": {"Business": +8, "Elite": +6, "Workers": -2}
-    },
-    "Raise Taxes": {
-        "immediate": {"growth": -0.2, "public_support": -2},
-        "delayed": {"turns": 1, "effects": {"debt": -1.5, "deficit": -1}},
-        "group_impact": {"Business": -6, "Elite": -8, "Workers": +3}
-    },
-    "Expand Subsidies": {
-        "immediate": {"inflation": 0.3, "public_support": 4, "protest_risk": -2},
-        "delayed": {"turns": 2, "effects": {"debt": 2, "deficit": 1.5}},
-        "group_impact": {"Workers": +6, "Farmers": +6}
-    },
-    "Price Controls": {
-        "immediate": {"inflation": -0.7, "growth": -0.4, "public_support": 2},
-        "delayed": {"turns": 2, "effects": {"fdi": -5}},
-        "group_impact": {"Workers": +5, "Business": -10}
-    },
-    "Raise Interest Rates": {
-        "immediate": {"inflation": -0.7, "growth": -0.5, "unemployment": 0.5, "currency_strength": 2},
-        "group_impact": {"Business": -3, "Middle Class": +2}
-    },
-    "Lower Interest Rates": {
-        "immediate": {"inflation": 0.6, "growth": 0.6, "unemployment": -0.4, "currency_strength": -2},
-        "group_impact": {"Business": +5, "Workers": -2}
-    },
-    "Increase Military Spending": {
-        "immediate": {"military_readiness": 5, "public_support": -1},
-        "delayed": {"turns": 1, "effects": {"debt": 1.2, "deficit": 0.8}},
-        "group_impact": {"Elite": +3}
-    },
-    "Political Reform": {
-        "immediate": {"legitimacy": 4, "institutional_stability": 2},
-        "delayed": {"turns": 3, "effects": {"government_stability": 3}},
-        "group_impact": {"Youth": +5, "Middle Class": +4}
-    },
-    "Security Crackdown": {
-        "immediate": {"protest_risk": -6, "legitimacy": -5, "government_stability": 4},
-        "group_impact": {"Workers": -8, "Youth": -10, "Elite": +4}
-    },
-    "Open Trade Negotiations": {
-        "immediate": {"trade_openness": 5, "fdi": 5, "trade_balance": 1, "international_tension": -2},
-        "group_impact": {"Business": +6, "Farmers": -3}
-    }
-}
-
-
-def apply_policy(game, policy_name):
-    state = game["state"]
-    metrics = state["metrics"]
-    policy = POLICIES[policy_name]
-
-    for key, value in policy["immediate"].items():
-        if key in metrics:
-            metrics[key] += value
-
-    # Apply factional group approval impacts
-    if "group_impact" in policy:
-        for group_name, delta in policy["group_impact"].items():
-            if group_name in state["groups"]:
-                state["groups"][group_name]["approval"] = clamp(
-                    state["groups"][group_name]["approval"] + delta
-                )
-
-    if "delayed" in policy:
-        delayed = policy["delayed"]
-        state["pending_effects"].append({
-            "turns": delayed["turns"],
-            "effects": delayed["effects"]
-        })
-
-    state["events"].append({
-        "year": state["year"],
-        "title": policy_name,
-        "description": f"The government implemented {policy_name}. Consequences will unfold over time.",
-        "effects": policy
-    })
-
-
-# ==========================================================
-# TURN ENGINE
-# ==========================================================
 
 def advance_turn(game):
     state = game["state"]
+    metrics = state["metrics"]
     
-    # If there's an active unresolved dilemma, block turn advancement until chosen
-    if state.get("active_dilemma") is not None:
-        return
-
-    state["year"] += 1
+    # Basic economic drift simulation
+    growth_drift = (metrics["government_stability"] - 50) * 0.02
+    metrics["growth"] = max(-15.0, min(15.0, 2.5 + growth_drift))
+    metrics["gdp"] *= (1.0 + metrics["growth"] / 100.0)
+    
     state["turn"] += 1
-
-    process_pending_effects(state)
-    simulate_economy(state)
-    simulate_society(state)
-    simulate_politics(state)
-    simulate_institutions(state)
-    simulate_regions(state)
-    simulate_foreign_affairs(state)
-
-    # Check for interactive dilemma generation
-    dilemma = generate_event(state)
-    if dilemma:
-        state["active_dilemma"] = dilemma
-        state["situations"].append(f"CRISIS: {dilemma['title']}")
-
-    m = state["metrics"]
-    for key in [
-        "public_support", "legitimacy", "government_stability",
-        "institutional_stability", "protest_risk", "election_risk",
-        "diplomacy", "military_readiness", "trade_openness",
-        "international_tension", "currency_strength"
-    ]:
-        m[key] = clamp(m[key])
-
+    
+    # Save a historical snapshot
     state["history"].append({
         "year": state["year"],
-        **m
+        "gdp": metrics["gdp"],
+        "debt": metrics["debt"],
+        "inflation": metrics["inflation"],
+        "unemployment": metrics["unemployment"],
+        "stability": metrics["government_stability"]
     })
-    state["situations"] = state["situations"][-10:]
+    
+    # Trigger dynamic era-specific events & dilemmas
+    trigger_era_event(state, game)
+
+def apply_policy(game, policy_name):
+    policy = POLICIES.get(policy_name)
+    if not policy:
+        return
+    
+    metrics = game["state"]["metrics"]
+    for key, delta in policy["effects"].items():
+        if key in metrics:
+            metrics[key] += delta
+            
+    game["state"]["events"].append({
+        "year": game["state"]["year"],
+        "title": f"Policy Implemented: {policy_name}",
+        "description": policy["description"]
+    })
