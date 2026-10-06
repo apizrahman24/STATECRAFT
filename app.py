@@ -1,5 +1,5 @@
 import json
-
+import datetime
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -21,7 +21,7 @@ from engine.events import resolve_dilemma
 
 st.set_page_config(
     page_title="STATECRAFT",
-    page_icon="🏛️",
+    page_icon="🏛️️",
     layout="wide"
 )
 
@@ -150,7 +150,7 @@ if st.session_state.game is None:
             government_config[setting] = st.selectbox(setting, options)
 
     with col2:
-        st.markdown("### ⚙️ Identity & Conditions")
+        st.markdown("### ⚙️️ Identity & Conditions")
         country_name = st.text_input("Country Name", "Republic of Novara")
         leader = st.text_input("Leader Name", selected["leader"])
 
@@ -166,11 +166,16 @@ if st.session_state.game is None:
 
     st.divider()
     if st.button("🚀 INITIALIZE NATION", type="primary", use_container_width=True):
-        st.session_state.game = create_game(
+        game_obj = create_game(
             country_name, year, historical_mode, selected, government_config,
             economy, territory, ideology, technology, society, foreign_position,
             scenario, crisis, leader
         )
+        # Initialize temporal tracking fields
+        game_obj["state"]["month"] = 1
+        game_obj["state"]["day"] = 1
+        game_obj["time_scale"] = "1 Year (Strategic)"
+        st.session_state.game = game_obj
         st.rerun()
     st.stop()
 
@@ -183,6 +188,14 @@ game = st.session_state.game
 state = game["state"]
 metrics = state["metrics"]
 
+# Ensure date fields exist for backward compatibility with older saves
+if "month" not in state:
+    state["month"] = 1
+if "day" not in state:
+    state["day"] = 1
+if "time_scale" not in game:
+    game["time_scale"] = "1 Year (Strategic)"
+
 
 # ==========================================================
 # SIDEBAR COMMAND CENTER
@@ -192,7 +205,27 @@ with st.sidebar:
     st.title("🏛️ STATECRAFT")
     st.markdown(f"### {game['country_name']}")
     st.caption(f"Era: {game['era']}")
-    st.write(f"📅 **Year:** {state['year']} &nbsp;|&nbsp; 🔄 **Turn:** {state['turn']}")
+    
+    # Display formatted date string
+    current_date_str = f"📅 {state['day']} / {state['month']} / {state['year']}"
+    st.markdown(f"**{current_date_str}**")
+    st.write(f"🔄 **Turn:** {state['turn']}")
+    
+    st.divider()
+    st.markdown("### ⏱️ Game Speed")
+    speed_options = {
+        "1 Day (Micro / Crisis)": 1,
+        "1 Month (Tactical)": 30,
+        "1 Year (Strategic)": 365
+    }
+    selected_speed_label = st.selectbox(
+        "Turn Time Increment", 
+        list(speed_options.keys()), 
+        index=list(speed_options.keys()).index(game.get("time_scale", "1 Year (Strategic)"))
+    )
+    game["time_scale"] = selected_speed_label
+    days_per_turn = speed_options[selected_speed_label]
+
     st.divider()
     st.write(f"**Government:** {game['government']['name']}")
     st.write(f"**Leader:** {game['leader']}")
@@ -216,12 +249,13 @@ with st.sidebar:
 # MAIN DASHBOARD VIEW
 # ==========================================================
 
+current_date_display = f"{state['day']:02d}/{state['month']:02d}/{state['year']}"
 st.markdown(f"""
 <div class="sc-hero">
-    <div class="sc-kicker">Strategic Command • Turn {state["turn"]}</div>
-    <div class="sc-title">🏛️ {game["country_name"]}</div>
+    <div class="sc-kicker">Strategic Command • Turn {state["turn"]} • Date: {current_date_display}</div>
+    <div class="sc-title">🏛️️ {game["country_name"]}</div>
     <div class="sc-subtitle">
-        {game["era"]} ({state["year"]}) &nbsp;•&nbsp; {game["government"]["name"]} &nbsp;•&nbsp; {game["territory"]}
+        {game["era"]} &nbsp;•&nbsp; {game["government"]["name"]} &nbsp;•&nbsp; Speed: {game['time_scale']}
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -292,7 +326,7 @@ with act_col2:
         apply_policy(game, policy_name)
         st.rerun()
 
-# 5. Full Detailed Records Tabs (Restored!)
+# 5. Full Detailed Records Tabs
 st.markdown('<div class="sc-section-header">📚 Detailed State Records</div>', unsafe_allow_html=True)
 tabs = st.tabs([
     "🏛 Government",
@@ -332,7 +366,7 @@ with tabs[3]:
     st.dataframe(parties_df.round(1), use_container_width=True)
 
 with tabs[4]:
-    st.header("🗺️ Regional Politics & Unrest")
+    st.header("🗺️️ Regional Politics & Unrest")
     regions_df = pd.DataFrame(state["regions"]).T
     st.dataframe(regions_df.round(1), use_container_width=True)
 
@@ -362,15 +396,24 @@ with tabs[6]:
 with tabs[7]:
     st.header("📜 Historical Log")
     for event in reversed(state["events"]):
-        st.markdown(f"### {event['year']} — {event['title']}")
+        st.markdown(f"### Year {event['year']} — {event['title']}")
         st.write(event["description"])
         st.divider()
 
-# 6. Turn Advancement Dock
+# 6. Turn Advancement Dock with Date Advancement Logic
 st.markdown("<br>", unsafe_allow_html=True)
 if state.get("active_dilemma") is not None:
-    st.warning("⚠️ You must resolve the active crisis dilemma above before advancing history to the next turn!")
+    st.warning("⚠️ You must resolve the active crisis dilemma above before advancing history!")
 else:
-    if st.button("⏩ END TURN — ADVANCE HISTORY", type="primary", use_container_width=True):
+    if st.button(f"⏩ ADVANCE TIME ({selected_speed_label.split(' ')[0]} {selected_speed_label.split(' ')[1]})", type="primary", use_container_width=True):
+        # Calculate calendar increment
+        current_date = datetime.date(state["year"], state["month"], state["day"])
+        new_date = current_date + datetime.timedelta(days=days_per_turn)
+        
+        state["year"] = new_date.year
+        state["month"] = new_date.month
+        state["day"] = new_date.day
+        
+        # Call the core turn progression engine
         advance_turn(game)
         st.rerun()
