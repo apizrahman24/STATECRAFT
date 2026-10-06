@@ -12,6 +12,7 @@ from engine.game import (
     apply_policy,
     POLICIES
 )
+from engine.events import resolve_dilemma
 
 
 # ==========================================================
@@ -19,11 +20,8 @@ from engine.game import (
 # ==========================================================
 
 st.set_page_config(
-
     page_title="STATECRAFT",
-
     page_icon="🏛️",
-
     layout="wide"
 )
 
@@ -127,13 +125,11 @@ div[data-testid="stMetric"] {
 """, unsafe_allow_html=True)
 
 
-
 # ==========================================================
 # SESSION
 # ==========================================================
 
 if "game" not in st.session_state:
-
     st.session_state.game = None
 
 
@@ -142,396 +138,97 @@ if "game" not in st.session_state:
 # ==========================================================
 
 if st.session_state.game is None:
-
     st.title("🏛️ STATECRAFT")
-
     st.subheader(
         "Build a country. Shape its institutions. "
         "Survive its history."
     )
-
     st.divider()
 
-    st.header(
-        "🌍 1. Historical Era"
-    )
+    st.header("🌍 1. Historical Era")
+    era_name = st.selectbox("Historical Era", list(ERA_DATA.keys()))
+    era = ERA_DATA[era_name]
 
-    era_name = st.selectbox(
+    st.header("📅 2. Starting Period")
+    period_name = st.selectbox("Starting Period", list(era["periods"].keys()))
+    period_start, period_end = era["periods"][period_name]
 
-        "Historical Era",
-
-        list(ERA_DATA.keys())
-    )
-
-    era = ERA_DATA[
-        era_name
-    ]
-
-    st.header(
-        "📅 2. Starting Period"
-    )
-
-    period_name = st.selectbox(
-
-        "Starting Period",
-
-        list(
-            era["periods"].keys()
-        )
-    )
-
-    period_start, period_end = (
-        era["periods"][period_name]
-    )
-
-    st.header(
-        "🗓️ 3. Starting Year"
-    )
-
-    year_mode = st.radio(
-
-        "Starting year",
-
-        [
-            "Early",
-            "Middle",
-            "Late",
-            "Custom"
-        ],
-
-        horizontal=True
-    )
-
+    st.header("🗓️️ 3. Starting Year")
+    year_mode = st.radio("Starting year", ["Early", "Middle", "Late", "Custom"], horizontal=True)
     if year_mode == "Early":
-
         year = period_start
-
     elif year_mode == "Middle":
-
-        year = (
-            period_start +
-            period_end
-        ) // 2
-
+        year = (period_start + period_end) // 2
     elif year_mode == "Late":
-
         year = period_end
-
     else:
+        year = st.slider("Exact Year", period_start, period_end, period_start)
 
-        year = st.slider(
+    st.info(f"Starting year: **{year}**")
 
-            "Exact Year",
+    st.header("📜 4. Historical Mode")
+    historical_mode = st.radio("Historical plausibility", ["Strict Historical", "Historically Plausible", "Alternate History"], horizontal=True)
 
-            period_start,
-
-            period_end,
-
-            period_start
-        )
-
-    st.info(
-        f"Starting year: **{year}**"
-    )
-
-    st.header(
-        "📜 4. Historical Mode"
-    )
-
-    historical_mode = st.radio(
-
-        "Historical plausibility",
-
-        [
-            "Strict Historical",
-            "Historically Plausible",
-            "Alternate History"
-        ],
-
-        horizontal=True
-    )
-
-    # ======================================================
-    # GOVERNMENTS
-    # ======================================================
-
-    st.header(
-        "🏛️ 5. Government"
-    )
-
-    def government_availability(
-        government
-    ):
-
+    st.header("🏛️ 5. Government")
+    def government_availability(government):
         gid = government["id"]
-
         if year <= 300:
-
-            common = [
-
-                "absolute_monarchy",
-                "aristocratic_republic",
-                "oligarchy",
-                "city_state",
-                "tribal_kingdom",
-                "tribal_confederation",
-                "theocracy",
-                "military_government"
-            ]
-
+            common = ["absolute_monarchy", "aristocratic_republic", "oligarchy", "city_state", "tribal_kingdom", "tribal_confederation", "theocracy", "military_government"]
         elif year <= 1500:
-
-            common = [
-
-                "absolute_monarchy",
-                "aristocratic_republic",
-                "oligarchy",
-                "tribal_kingdom",
-                "tribal_confederation",
-                "theocracy",
-                "military_government",
-                "confederation",
-                "collegial"
-            ]
-
+            common = ["absolute_monarchy", "aristocratic_republic", "oligarchy", "tribal_kingdom", "tribal_confederation", "theocracy", "military_government", "confederation", "collegial"]
         elif year <= 1800:
-
-            common = [
-
-                "absolute_monarchy",
-                "constitutional_monarchy",
-                "aristocratic_republic",
-                "oligarchy",
-                "theocracy",
-                "military_government",
-                "confederation",
-                "colonial",
-                "personalist"
-            ]
-
+            common = ["absolute_monarchy", "constitutional_monarchy", "aristocratic_republic", "oligarchy", "theocracy", "military_government", "confederation", "colonial", "personalist"]
         elif year <= 1900:
-
-            common = [
-
-                "absolute_monarchy",
-                "constitutional_monarchy",
-                "parliamentary_republic",
-                "presidential_republic",
-                "aristocratic_republic",
-                "military_government",
-                "colonial",
-                "confederation",
-                "personalist"
-            ]
-
+            common = ["absolute_monarchy", "constitutional_monarchy", "parliamentary_republic", "presidential_republic", "aristocratic_republic", "military_government", "colonial", "confederation", "personalist"]
         else:
-
-            common = [
-
-                "constitutional_monarchy",
-                "parliamentary_republic",
-                "presidential_republic",
-                "semi_presidential",
-                "military_government",
-                "one_party",
-                "personalist",
-                "technocracy",
-                "theocracy",
-                "direct_democracy",
-                "revolutionary",
-                "colonial",
-                "hybrid"
-            ]
-
-        if gid in common:
-
-            return "🟢 Common"
-
-        return "🟡 Unusual"
+            common = ["constitutional_monarchy", "parliamentary_republic", "presidential_republic", "semi_presidential", "military_government", "one_party", "personalist", "technocracy", "theocracy", "direct_democracy", "revolutionary", "colonial", "hybrid"]
+        return "🟢 Common" if gid in common else "🟡 Unusual"
 
     available = []
-
     for government in GOVERNMENTS:
-
-        status = government_availability(
-            government
-        )
-
-        if (
-
-            historical_mode ==
-            "Strict Historical"
-
-            and
-
-            status ==
-            "🟡 Unusual"
-
-        ):
-
+        status = government_availability(government)
+        if historical_mode == "Strict Historical" and status == "🟡 Unusual":
             continue
-
-        available.append(
-            government
-        )
+        available.append(government)
 
     selected = st.selectbox(
-
         "Government Type",
-
         available,
-
-        format_func=lambda g:
-            (
-                f"{g['name']} "
-                f"{government_availability(g)}"
-            )
+        format_func=lambda g: f"{g['name']} {government_availability(g)}"
     )
+    st.info(selected["description"])
 
-    st.info(
-        selected["description"]
-    )
-
-    st.subheader(
-        "⚙️ Government Configuration"
-    )
-
+    st.subheader("⚙️️ Government Configuration")
     government_config = {}
+    for setting, options in selected["configuration"].items():
+        government_config[setting] = st.selectbox(setting, options)
 
-    for setting, options in (
-        selected["configuration"].items()
-    ):
-
-        government_config[
-            setting
-        ] = st.selectbox(
-
-            setting,
-
-            options
-        )
-
-    # ======================================================
-    # COUNTRY
-    # ======================================================
-
-    st.header(
-        "🌎 6. Country"
-    )
-
-    country_name = st.text_input(
-
-        "Country Name",
-
-        "Republic of Novara"
-    )
-
-    leader = st.text_input(
-
-        "Leader",
-
-        selected["leader"]
-    )
+    st.header("🌎 6. Country")
+    country_name = st.text_input("Country Name", "Republic of Novara")
+    leader = st.text_input("Leader", selected["leader"])
 
     col1, col2 = st.columns(2)
-
     with col1:
-
-        economy = st.selectbox(
-            "Economic System",
-            era["economies"]
-        )
-
-        territory = st.selectbox(
-            "Territorial Structure",
-            era["territories"]
-        )
-
-        ideology = st.selectbox(
-            "Political Philosophy",
-            era["ideologies"]
-        )
-
+        economy = st.selectbox("Economic System", era["economies"])
+        territory = st.selectbox("Territorial Structure", era["territories"])
+        ideology = st.selectbox("Political Philosophy", era["ideologies"])
     with col2:
+        technology = st.selectbox("Technology", era["technology"])
+        society = st.selectbox("Social Structure", era["societies"])
+        foreign_position = st.selectbox("International Position", era["foreign_positions"])
 
-        technology = st.selectbox(
-            "Technology",
-            era["technology"]
-        )
-
-        society = st.selectbox(
-            "Social Structure",
-            era["societies"]
-        )
-
-        foreign_position = st.selectbox(
-            "International Position",
-            era["foreign_positions"]
-        )
-
-    # ======================================================
-    # STARTING CONDITIONS
-    # ======================================================
-
-    st.header(
-        "⚠️ 7. Starting Conditions"
-    )
-
-    scenario = st.selectbox(
-        "Starting Scenario",
-        era["scenarios"]
-    )
-
-    crisis = st.selectbox(
-        "Initial Crisis",
-        era["crises"]
-    )
+    st.header("⚠️ 7. Starting Conditions")
+    scenario = st.selectbox("Starting Scenario", era["scenarios"])
+    crisis = st.selectbox("Initial Crisis", era["crises"])
 
     st.divider()
-
-    if st.button(
-
-        "🚀 CREATE COUNTRY",
-
-        type="primary",
-
-        use_container_width=True
-
-    ):
-
+    if st.button("🚀 CREATE COUNTRY", type="primary", use_container_width=True):
         st.session_state.game = create_game(
-
-            country_name,
-
-            year,
-
-            historical_mode,
-
-            selected,
-
-            government_config,
-
-            economy,
-
-            territory,
-
-            ideology,
-
-            technology,
-
-            society,
-
-            foreign_position,
-
-            scenario,
-
-            crisis,
-
-            leader
+            country_name, year, historical_mode, selected, government_config,
+            economy, territory, ideology, technology, society, foreign_position,
+            scenario, crisis, leader
         )
-
         st.rerun()
-
     st.stop()
 
 
@@ -540,9 +237,7 @@ if st.session_state.game is None:
 # ==========================================================
 
 game = st.session_state.game
-
 state = game["state"]
-
 metrics = state["metrics"]
 
 
@@ -551,61 +246,25 @@ metrics = state["metrics"]
 # ==========================================================
 
 with st.sidebar:
-
     st.title("🏛️ STATECRAFT")
-
-    st.write(
-        f"### {game['country_name']}"
-    )
-
-    st.write(
-        f"Year: **{state['year']}**"
-    )
-
-    st.write(
-        f"Turn: **{state['turn']}**"
-    )
-
+    st.write(f"### {game['country_name']}")
+    st.write(f"Year: **{state['year']}**")
+    st.write(f"Turn: **{state['turn']}**")
+    st.divider()
+    st.write(f"**Government:** {game['government']['name']}")
+    st.write(f"**Territory:** {game['territory']}")
+    st.write(f"**Leader:** {game['leader']}")
     st.divider()
 
-    st.write(
-        f"**Government:** "
-        f"{game['government']['name']}"
-    )
-
-    st.write(
-        f"**Territory:** "
-        f"{game['territory']}"
-    )
-
-    st.write(
-        f"**Leader:** "
-        f"{game['leader']}"
-    )
-
-    st.divider()
-
-    if st.button(
-        "🔄 New Country"
-    ):
-
+    if st.button("🔄 New Country"):
         st.session_state.game = None
-
         st.rerun()
 
-    save_data = json.dumps(
-        game,
-        indent=4
-    )
-
+    save_data = json.dumps(game, indent=4)
     st.download_button(
-
         "💾 Save Game",
-
         save_data,
-
         file_name="statecraft_save.json",
-
         mime="application/json"
     )
 
@@ -626,6 +285,23 @@ st.markdown(f"""
     </div>
 </div>
 """, unsafe_allow_html=True)
+
+# Active Crisis / Interactive Dilemma Prompt Block
+active_dilemma = state.get("active_dilemma")
+if active_dilemma:
+    st.markdown(f"""
+    <div class="sc-alert" style="border-left-color: #f39c12; background: linear-gradient(90deg, rgba(243,156,18,.15), rgba(17,25,35,.9));">
+        <div class="sc-alert-title" style="color: #f39c12;">⚡ ACTIVE CRISIS DILEMMA: {active_dilemma["title"]}</div>
+        <div class="sc-alert-body" style="font-size: .9rem; margin-top: .4rem;">{active_dilemma["description"]}</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.write("**Choose your administration's response:**")
+    for idx, choice in enumerate(active_dilemma["choices"]):
+        if st.button(f"👉 {choice['label']}", key=f"dilemma_choice_{idx}", use_container_width=True):
+            resolve_dilemma(state, idx)
+            st.rerun()
+    st.divider()
 
 # National snapshot
 snapshot = [
@@ -650,7 +326,7 @@ for col, (label, value, caption) in zip(cols, snapshot):
         """, unsafe_allow_html=True)
 
 # Situation + political health
-st.markdown('<div class="sc-section">⚠️ National Situation</div>', unsafe_allow_html=True)
+st.markdown('<div class="sc-section">⚠️ National Situation & Factions</div>', unsafe_allow_html=True)
 left, right = st.columns([1.35, 1], gap="large")
 
 with left:
@@ -661,7 +337,7 @@ with left:
             <div class="sc-alert">
                 <div class="sc-alert-title">🔴 {situation}</div>
                 <div class="sc-alert-body">
-                    This situation is currently affecting the national environment.
+                    Active pressure point affecting national stability.
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -682,22 +358,17 @@ st.markdown('<div class="sc-section">📊 National Performance</div>', unsafe_al
 history = pd.DataFrame(state["history"])
 if not history.empty:
     chart_col1, chart_col2 = st.columns(2, gap="large")
-
     with chart_col1:
         chart = px.line(history, x="year", y=["gdp", "debt"], markers=True, title="Economy & Fiscal Position")
-        chart.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                            margin=dict(l=10, r=10, t=45, b=10), legend_title_text="")
+        chart.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", margin=dict(l=10, r=10, t=45, b=10), legend_title_text="")
         st.plotly_chart(chart, use_container_width=True)
-
     with chart_col2:
-        chart2 = px.line(history, x="year", y=["inflation", "unemployment"], markers=True,
-                         title="Inflation & Unemployment")
-        chart2.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                             margin=dict(l=10, r=10, t=45, b=10), legend_title_text="")
+        chart2 = px.line(history, x="year", y=["inflation", "unemployment"], markers=True, title="Inflation & Unemployment")
+        chart2.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", margin=dict(l=10, r=10, t=45, b=10), legend_title_text="")
         st.plotly_chart(chart2, use_container_width=True)
 
-# Four strategic panels
-st.markdown('<div class="sc-section">🌍 State Overview</div>', unsafe_allow_html=True)
+# Four strategic panels including Rivals
+st.markdown('<div class="sc-section">🌍 State Overview & Geopolitics</div>', unsafe_allow_html=True)
 ov1, ov2, ov3, ov4 = st.columns(4)
 
 with ov1:
@@ -709,30 +380,22 @@ with ov1:
     st.markdown("</div>", unsafe_allow_html=True)
 
 with ov2:
-    st.markdown('<div class="sc-panel"><b>👥 Society</b>', unsafe_allow_html=True)
-    st.write(f"**Public support:** {metrics['public_support']:.1f}")
-    st.write(f"**Protest risk:** {metrics['protest_risk']:.1f}")
-    groups_preview = state.get("groups", {})
-    if groups_preview:
-        def group_score(item):
-            data = item[1]
-            return data.get("approval", data.get("support", 0))
-        strongest = max(groups_preview.items(), key=group_score)
-        st.write(f"**Strongest group:** {strongest[0]}")
+    st.markdown('<div class="sc-panel"><b>👥 Factions</b>', unsafe_allow_html=True)
+    groups = state.get("groups", {})
+    if groups:
+        for gname, gdata in list(groups.items())[:3]:
+            st.write(f"**{gname}:** App {gdata['approval']:.0f} | Rad {gdata['radicalism']:.0f}")
     st.markdown("</div>", unsafe_allow_html=True)
 
 with ov3:
-    st.markdown('<div class="sc-panel"><b>🏛️ Institutions</b>', unsafe_allow_html=True)
-    institutions = state.get("institutions", {})
-    if institutions:
-        for key, value in list(institutions.items())[:5]:
-            try:
-                shown = f"{float(value):.1f}"
-            except (TypeError, ValueError):
-                shown = str(value)
-            st.write(f"**{key.replace('_', ' ').title()}:** {shown}")
+    st.markdown('<div class="sc-panel"><b>⚔️ Rival Powers</b>', unsafe_allow_html=True)
+    rivals = state.get("rivals", [])
+    if rivals:
+        for r in rivals:
+            st.write(f"**{r['name']}**")
+            st.write(f"Rel: {r['relation']} | Stance: {r['stance']}")
     else:
-        st.write("Institutional data unavailable.")
+        st.write("No major regional rivals.")
     st.markdown("</div>", unsafe_allow_html=True)
 
 with ov4:
@@ -743,44 +406,7 @@ with ov4:
     st.write(f"**International tension:** {metrics['international_tension']:.1f}")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# Political landscape + news
-st.markdown('<div class="sc-section">🗳️ Political Landscape</div>', unsafe_allow_html=True)
-political_col, news_col = st.columns([1.4, 1], gap="large")
-
-with political_col:
-    parties_data = state.get("parties", {})
-    if parties_data:
-        party_df = pd.DataFrame(parties_data).T.reset_index().rename(columns={"index": "Party"})
-        if "support" in party_df.columns:
-            pchart = px.bar(party_df.sort_values("support"), x="support", y="Party",
-                            orientation="h", title="Political Support")
-            pchart.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)",
-                                 plot_bgcolor="rgba(0,0,0,0)",
-                                 margin=dict(l=10, r=10, t=45, b=10))
-            st.plotly_chart(pchart, use_container_width=True)
-        else:
-            visible = [c for c in ["Party", "seats", "power", "loyalty"] if c in party_df.columns]
-            st.dataframe(party_df[visible].round(1), use_container_width=True, hide_index=True)
-    else:
-        st.info("No detailed party data available.")
-
-with news_col:
-    st.markdown('<div class="sc-panel"><div class="sc-card-title">National News</div>', unsafe_allow_html=True)
-    events = state.get("events", [])
-    if events:
-        for event in reversed(events[-5:]):
-            st.markdown(f"""
-            <div class="sc-news">
-                <div class="sc-news-year">{event.get("year", state["year"])}</div>
-                <div class="sc-news-title">{event.get("title", "National Event")}</div>
-                <div class="sc-news-body">{event.get("description", "")}</div>
-            </div>
-            """, unsafe_allow_html=True)
-    else:
-        st.write("The historical record is just beginning.")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# Quick decisions
+# Executive Decisions
 st.markdown('<div class="sc-section">🎯 Executive Decisions</div>', unsafe_allow_html=True)
 action_col1, action_col2 = st.columns([2, 1])
 with action_col1:
@@ -792,413 +418,67 @@ with action_col2:
         apply_policy(game, policy_name)
         st.rerun()
 
-# Detailed records
+# Detailed records tabs
 st.markdown('<div class="sc-section">📚 Detailed State Records</div>', unsafe_allow_html=True)
 tabs = st.tabs([
-    "🏛️ Government",
+    "🏛️️ Government",
     "📈 Economy",
-    "👥 Society",
+    "👥 Society & Factions",
     "🗳️ Politics",
     "🗺️ Regions",
-    "🌍 Foreign",
+    "🌍 Foreign & Rivals",
     "⚠️ Situations",
     "📜 History"
 ])
 
-
-# ==========================================================
-# GOVERNMENT
-# ==========================================================
-
 with tabs[0]:
-
-    st.header(
-        game["government"]["name"]
-    )
-
-    st.write(
-        game["government"]["description"]
-    )
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-
-        st.subheader(
-            "Institutional Structure"
-        )
-
-        for key, value in (
-            game[
-                "government_config"
-            ].items()
-        ):
-
-            st.write(
-                f"**{key}:** {value}"
-            )
-
-    with col2:
-
-        st.metric(
-            "Legitimacy",
-            f"{metrics['legitimacy']:.1f}"
-        )
-
-        st.metric(
-            "Government Stability",
-            f"{metrics['government_stability']:.1f}"
-        )
-
-        st.metric(
-            "Institutional Stability",
-            f"{metrics['institutional_stability']:.1f}"
-        )
-
-    st.subheader(
-        "State Institutions"
-    )
-
-    institutions = pd.DataFrame(
-        [
-            {
-                "Institution":
-                    key.replace(
-                        "_",
-                        " "
-                    ).title(),
-
-                "Strength":
-                    value
-            }
-
-            for key, value in
-            state[
-                "institutions"
-            ].items()
-        ]
-    )
-
-    st.dataframe(
-        institutions.round(1),
-        use_container_width=True,
-        hide_index=True
-    )
-
-
-# ==========================================================
-# ECONOMY
-# ==========================================================
+    st.header(game["government"]["name"])
+    st.write(game["government"]["description"])
+    for key, value in game["government_config"].items():
+        st.write(f"**{key}:** {value}")
 
 with tabs[1]:
-
-    st.header(
-        "📈 Economy"
-    )
-
-    st.write(
-        f"**Economic System:** "
-        f"{game['economy']}"
-    )
-
-    history = pd.DataFrame(
-        state["history"]
-    )
-
-    chart = px.line(
-
-        history,
-
-        x="year",
-
-        y=[
-            "gdp",
-            "debt"
-        ],
-
-        markers=True,
-
-        title="Economic Development"
-    )
-
-    st.plotly_chart(
-        chart,
-        use_container_width=True
-    )
-
-    chart2 = px.line(
-
-        history,
-
-        x="year",
-
-        y=[
-            "inflation",
-            "unemployment"
-        ],
-
-        markers=True,
-
-        title="Inflation and Unemployment"
-    )
-
-    st.plotly_chart(
-        chart2,
-        use_container_width=True
-    )
-
-    c1, c2, c3, c4 = st.columns(4)
-
-    c1.metric(
-        "Interest Rate",
-        f"{metrics['interest_rate']:.1f}%"
-    )
-
-    c2.metric(
-        "Currency",
-        f"{metrics['currency_strength']:.1f}"
-    )
-
-    c3.metric(
-        "FDI",
-        f"{metrics['fdi']:.1f}"
-    )
-
-    c4.metric(
-        "Reserves",
-        f"{metrics['reserves']:.1f}"
-    )
-
-
-# ==========================================================
-# SOCIETY
-# ==========================================================
+    st.header("📈 Economy")
+    st.write(f"**Economic System:** {game['economy']}")
 
 with tabs[2]:
-
-    st.header(
-        "👥 Society"
-    )
-
-    groups = pd.DataFrame(
-        state["groups"]
-    ).T
-
-    st.dataframe(
-        groups.round(1),
-        use_container_width=True
-    )
-
-    c1, c2, c3 = st.columns(3)
-
-    c1.metric(
-        "Public Support",
-        f"{metrics['public_support']:.1f}"
-    )
-
-    c2.metric(
-        "Protest Risk",
-        f"{metrics['protest_risk']:.1f}"
-    )
-
-    c3.metric(
-        "Election Risk",
-        f"{metrics['election_risk']:.1f}"
-    )
-
-
-# ==========================================================
-# POLITICS
-# ==========================================================
+    st.header("👥 Factional Social Groups")
+    groups_df = pd.DataFrame(state["groups"]).T
+    st.dataframe(groups_df.round(1), use_container_width=True)
 
 with tabs[3]:
-
-    st.header(
-        "🗳️ Political System"
-    )
-
-    st.subheader(
-        "Parliament"
-    )
-
-    st.info(
-        state.get(
-            "parliament_status",
-            "Initial Parliament"
-        )
-    )
-
-    parties = pd.DataFrame(
-        state["parties"]
-    ).T
-
-    st.dataframe(
-        parties.round(1),
-        use_container_width=True
-    )
-
-    st.subheader(
-        "Political Leaders"
-    )
-
-    leaders = pd.DataFrame(
-        state["leaders"]
-    ).T
-
-    st.dataframe(
-        leaders,
-        use_container_width=True
-    )
-
-
-# ==========================================================
-# REGIONS
-# ==========================================================
+    st.header("🗳️ Political System")
+    parties_df = pd.DataFrame(state["parties"]).T
+    st.dataframe(parties_df.round(1), use_container_width=True)
 
 with tabs[4]:
-
-    st.header(
-        "🗺️ Regional Politics"
-    )
-
-    regions = pd.DataFrame(
-        state["regions"]
-    ).T
-
-    st.dataframe(
-        regions.round(1),
-        use_container_width=True
-    )
-
-
-# ==========================================================
-# FOREIGN
-# ==========================================================
+    st.header("🗺️ Regional Politics")
+    regions_df = pd.DataFrame(state["regions"]).T
+    st.dataframe(regions_df.round(1), use_container_width=True)
 
 with tabs[5]:
-
-    st.header(
-        "🌍 Foreign Affairs"
-    )
-
-    st.write(
-        f"**International Position:** "
-        f"{game['foreign_position']}"
-    )
-
-    c1, c2, c3, c4 = st.columns(4)
-
-    c1.metric(
-        "Diplomacy",
-        f"{metrics['diplomacy']:.1f}"
-    )
-
-    c2.metric(
-        "Military Readiness",
-        f"{metrics['military_readiness']:.1f}"
-    )
-
-    c3.metric(
-        "Trade Openness",
-        f"{metrics['trade_openness']:.1f}"
-    )
-
-    c4.metric(
-        "International Tension",
-        f"{metrics['international_tension']:.1f}"
-    )
-
-
-# ==========================================================
-# SITUATIONS
-# ==========================================================
+    st.header("🌍 Foreign Affairs & Rival Nations")
+    rivals_df = pd.DataFrame(state.get("rivals", []))
+    if not rivals_df.empty:
+        st.dataframe(rivals_df, use_container_width=True, hide_index=True)
 
 with tabs[6]:
-
-    st.header(
-        "⚠️ Current Situations"
-    )
-
-    for situation in reversed(
-        state["situations"]
-    ):
-
-        st.warning(
-            situation
-        )
-
-    st.subheader(
-        "Pending Consequences"
-    )
-
-    if state["pending_effects"]:
-
-        for effect in state[
-            "pending_effects"
-        ]:
-
-            st.info(
-
-                f"Effects arriving in "
-                f"**{effect['turns']} turn(s)**: "
-                f"{effect['effects']}"
-            )
-
-    else:
-
-        st.success(
-            "No major delayed effects."
-        )
-
-
-# ==========================================================
-# HISTORY
-# ==========================================================
+    st.header("⚠️ Current Situations")
+    for situation in reversed(state["situations"]):
+        st.warning(situation)
 
 with tabs[7]:
+    st.header("📜 Historical Record")
+    for event in reversed(state["events"]):
+        st.markdown(f"### {event['year']} — {event['title']}")
+        st.write(event["description"])
 
-    st.header(
-        "📜 Historical Record"
-    )
-
-    for event in reversed(
-        state["events"]
-    ):
-
-        st.markdown(
-
-            f"### {event['year']} — "
-            f"{event['title']}"
-        )
-
-        st.write(
-            event["description"]
-        )
-
-
-# ==========================================================
-# END TURN
-# ==========================================================
-
+# End turn
 st.divider()
-
 st.markdown('<div class="sc-section">⏳ Continue History</div>', unsafe_allow_html=True)
-
-st.write(
-
-    "End the current turn and allow the "
-    "economic, political, social and "
-    "international systems to evolve."
-)
-
-if st.button(
-    "⏩ END TURN — ADVANCE HISTORY",
-    type="primary",
-    use_container_width=True
-):
-
-    advance_turn(
-        game
-    )
-
-    st.rerun()
+if state.get("active_dilemma") is not None:
+    st.warning("⚠️ You must resolve the active crisis dilemma above before advancing history to the next turn!")
+else:
+    if st.button("⏩ END TURN — ADVANCE HISTORY", type="primary", use_container_width=True):
+        advance_turn(game)
+        st.rerun()
