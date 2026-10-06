@@ -429,7 +429,7 @@ if events_list:
         </div>
         """, unsafe_allow_html=True)
 else:
-    st.markdown('<div style="color: #64748b; font-style: italic;">No bulletins recorded on the wire. The nation rests in peace.</div>', unsafe_allow_html=True)
+    st.markdown('<div style="color: #64748b; font-style: italic;">No events recorded. The nation is at peace.</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 with st.expander("📜 View Full Historical Wire Archive"):
