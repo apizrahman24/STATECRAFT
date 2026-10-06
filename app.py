@@ -432,7 +432,7 @@ else:
     st.markdown('<div style="color: #64748b; font-style: italic;">No events recorded. The nation is at peace.</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-with st.expander("📜 View Full Historical Wire Archive"):
+with st.expander("📜 View Full Historical Archive"):
     if events_list:
         for ev in reversed(events_list):
             st.markdown(f"**[{ev['year']}] {ev['title']}**")
