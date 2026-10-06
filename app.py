@@ -25,15 +25,19 @@ st.set_page_config(
     layout="wide"
 )
 
+# Inject Google Fonts (Cinzel for Grand Strategy vibe, Inter for clean UI) & Custom Polish
 st.markdown("""
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@400;500;600;700&display=swap');
+
 .stApp {
     background:
-        radial-gradient(circle at 85% 0%, rgba(214,179,106,.06), transparent 30%),
-        linear-gradient(180deg, #090d12 0%, #0e1520 100%);
+        radial-gradient(circle at 85% 0%, rgba(214,179,106,.07), transparent 35%),
+        linear-gradient(180deg, #070a0f 0%, #0c121d 100%);
+    font-family: 'Inter', sans-serif;
 }
 [data-testid="stSidebar"] {
-    background: #070a0f;
+    background: #05070a;
     border-right: 1px solid #1e293b;
 }
 .block-container {
@@ -41,30 +45,44 @@ st.markdown("""
     padding-bottom: 3rem;
     max-width: 1450px;
 }
+h1, h2, h3, .sc-title {
+    font-family: 'Cinzel', serif !important;
+}
 .sc-hero {
-    padding: 1.5rem 1.8rem;
-    border: 1px solid #1e293b;
+    padding: 1.8rem 2rem;
+    border: 1px solid rgba(214,179,106,0.2);
     border-radius: 14px;
-    background: linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.85));
+    background: linear-gradient(135deg, rgba(15,23,42,0.95), rgba(20,27,45,0.85));
     margin-bottom: 1.5rem;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
 }
 .sc-kicker {
     color: #e2b764;
     text-transform: uppercase;
     font-size: 0.7rem;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.2em;
     font-weight: 700;
 }
-.sc-title { font-size: 2.1rem; font-weight: 800; line-height: 1.1; color: #f8fafc; }
+.sc-title { 
+    font-size: 2.3rem; 
+    font-weight: 900; 
+    line-height: 1.1; 
+    color: #f8fafc; 
+    letter-spacing: 0.03em;
+}
 .sc-subtitle { color: #94a3b8; margin-top: 0.4rem; font-size: 0.95rem; }
 
 .sc-card {
     background: rgba(15, 23, 42, 0.75);
     border: 1px solid #1e293b;
     border-radius: 10px;
-    padding: 0.9rem 1rem;
-    margin-bottom: 0.5rem;
+    padding: 1rem 1.1rem;
+    margin-bottom: 0.6rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: border-color 0.2s ease;
+}
+.sc-card:hover {
+    border-color: rgba(214,179,106,0.4);
 }
 .sc-card-title {
     color: #94a3b8;
@@ -73,24 +91,50 @@ st.markdown("""
     letter-spacing: 0.12em;
     font-weight: 700;
 }
-.sc-value { font-size: 1.4rem; font-weight: 800; margin-top: 0.2rem; color: #f1f5f9; }
+.sc-value { font-size: 1.45rem; font-weight: 800; margin-top: 0.2rem; color: #f1f5f9; }
 .sc-caption { color: #64748b; font-size: 0.75rem; margin-top: 0.1rem; }
 
+.sc-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-left: 0.4rem;
+}
+.badge-good { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+.badge-warn { background: rgba(234, 179, 8, 0.15); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.3); }
+.badge-bad  { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
 .sc-section-header {
-    font-size: 1.1rem;
+    font-family: 'Cinzel', serif;
+    font-size: 1.2rem;
     font-weight: 750;
     color: #e2e8f0;
-    margin-top: 1.5rem;
-    margin-bottom: 0.75rem;
+    margin-top: 1.8rem;
+    margin-bottom: 0.85rem;
     border-bottom: 1px solid #1e293b;
-    padding-bottom: 0.3rem;
+    padding-bottom: 0.35rem;
 }
 .sc-alert {
     border-left: 4px solid #ef4444;
-    background: linear-gradient(90deg, rgba(239,68,68,0.1), rgba(15,23,42,0.9));
+    background: linear-gradient(90deg, rgba(239,68,68,0.12), rgba(15,23,42,0.9));
+    border-radius: 8px;
+    padding: 0.9rem 1.1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 15px rgba(239,68,68,0.15);
+}
+.sc-ticker {
+    background: rgba(10, 15, 25, 0.85);
+    border: 1px solid #1e293b;
     border-radius: 8px;
     padding: 0.8rem 1rem;
-    margin-bottom: 0.75rem;
+    max-height: 140px;
+    overflow-y: auto;
+    font-size: 0.85rem;
+    color: #cbd5e1;
 }
 .stTabs [data-baseweb="tab-list"] { gap: 0.5rem; border-bottom: 1px solid #1e293b; }
 .stButton > button[kind="primary"] {
@@ -98,6 +142,8 @@ st.markdown("""
     color: #ffffff;
     border: none;
     font-weight: 700;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.05em;
 }
 .stButton > button { border-radius: 8px; }
 </style>
@@ -164,7 +210,7 @@ if st.session_state.game is None:
         scenario = st.selectbox("Starting Scenario", era["scenarios"])
         crisis = st.selectbox("Initial Crisis", era["crises"])
 
-        st.markdown("### ⏱️ Campaign Game Speed (Permanent)")
+        st.markdown("### ⏱️ Campaign Game Speed (Locked)")
         speed_choices = {
             "1 Day (Micro / Crisis)": 1,
             "1 Month (Tactical)": 30,
@@ -179,7 +225,6 @@ if st.session_state.game is None:
             economy, territory, ideology, technology, society, foreign_position,
             scenario, crisis, leader
         )
-        # Store fixed time settings
         game_obj["state"]["month"] = 1
         game_obj["state"]["day"] = 1
         game_obj["time_scale"] = chosen_speed_label
@@ -198,7 +243,7 @@ game = st.session_state.game
 state = game["state"]
 metrics = state["metrics"]
 
-# Fallbacks for older save compatibility
+# Compatibility fallbacks
 if "month" not in state:
     state["month"] = 1
 if "day" not in state:
@@ -216,8 +261,8 @@ days_per_turn = game["days_per_turn"]
 # ==========================================================
 
 with st.sidebar:
-    st.title("🏛️ STATECRAFT")
-    st.markdown(f"### {game['country_name']}")
+    st.markdown("### 🏛️ STATECRAFT")
+    st.markdown(f"**{game['country_name']}**")
     st.caption(f"Era: {game['era']}")
     
     current_date_str = f"📅 {state['day']} / {state['month']} / {state['year']}"
@@ -225,12 +270,11 @@ with st.sidebar:
     st.write(f"🔄 **Turn:** {state['turn']}")
     
     st.divider()
-    st.markdown("### ⏱️ Campaign Speed")
-    st.info(f"Locked Speed: **{game['time_scale']}**")
-
-    st.divider()
-    st.write(f"**Government:** {game['government']['name']}")
+    st.markdown("### 👑 Leader Profile")
     st.write(f"**Leader:** {game['leader']}")
+    st.write(f"**Government:** {game['government']['name']}")
+    st.info(f"⏱️ Speed: {game['time_scale']}")
+
     st.divider()
 
     if st.button("🔄 Abandon / New Country", use_container_width=True):
@@ -257,7 +301,7 @@ st.markdown(f"""
     <div class="sc-kicker">Strategic Command • Turn {state["turn"]} • Date: {current_date_display}</div>
     <div class="sc-title">🏛️ {game["country_name"]}</div>
     <div class="sc-subtitle">
-        {game["era"]} &nbsp;•&nbsp; {game["government"]["name"]} &nbsp;•&nbsp; Speed: {game['time_scale']}
+        {game["era"]} &nbsp;•&nbsp; {game["government"]["name"]} &nbsp;•&nbsp; Leader: {game['leader']}
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -267,7 +311,7 @@ active_dilemma = state.get("active_dilemma")
 if active_dilemma:
     st.markdown(f"""
     <div class="sc-alert">
-        <div style="font-weight: 800; font-size: 1.05rem; color: #f87171;">⚡ CRITICAL DILEMMA: {active_dilemma["title"]}</div>
+        <div style="font-weight: 800; font-size: 1.05rem; color: #f87171; font-family: 'Cinzel', serif;">⚡ CRITICAL DILEMMA: {active_dilemma["title"]}</div>
         <div style="color: #cbd5e1; font-size: 0.9rem; margin-top: 0.3rem;">{active_dilemma["description"]}</div>
     </div>
     """, unsafe_allow_html=True)
@@ -281,28 +325,62 @@ if active_dilemma:
                 st.rerun()
     st.divider()
 
-# 2. Key Metrics Overview Grid
+# Helper badge logic for metrics
+def get_badge(label, val):
+    if label == "Growth":
+        return "badge-good" if val >= 0 else "badge-bad"
+    if label == "Inflation":
+        return "badge-good" if val < 4 else ("badge-warn" if val < 8 else "badge-bad")
+    if label == "Unemployment":
+        return "badge-good" if val < 6 else ("badge-warn" if val < 10 else "badge-bad")
+    if label == "Debt / GDP":
+        return "badge-good" if val < 50 else ("badge-warn" if val < 90 else "badge-bad")
+    if label in ["Stability", "Approval", "Legitimacy"]:
+        return "badge-good" if val >= 60 else ("badge-warn" if val >= 40 else "badge-bad")
+    return "badge-good"
+
+# 2. Key Metrics Overview Grid with Status Badges
+growth_val = metrics['growth']
+inf_val = metrics['inflation']
+unemp_val = metrics['unemployment']
+debt_val = metrics['debt']
+stab_val = metrics['government_stability']
+supp_val = metrics['public_support']
+leg_val = metrics['legitimacy']
+
 snapshot = [
-    ("GDP", f"{metrics['gdp']:.1f}", "Total Output"),
-    ("Growth", f"{metrics['growth']:.1f}%", "Annual Rate"),
-    ("Inflation", f"{metrics['inflation']:.1f}%", "Price Index"),
-    ("Unemployment", f"{metrics['unemployment']:.1f}%", "Jobless Rate"),
-    ("Debt / GDP", f"{metrics['debt']:.1f}%", "National Debt"),
-    ("Stability", f"{metrics['government_stability']:.1f}", "Regime Stability"),
-    ("Approval", f"{metrics['public_support']:.1f}", "Public Support"),
-    ("Legitimacy", f"{metrics['legitimacy']:.1f}", "Mandate Level"),
+    ("GDP", f"{metrics['gdp']:.1f}", "Total Output", "badge-good"),
+    ("Growth", f"{growth_val:.1f}%", "Annual Rate", get_badge("Growth", growth_val)),
+    ("Inflation", f"{inf_val:.1f}%", "Price Index", get_badge("Inflation", inf_val)),
+    ("Unemployment", f"{unemp_val:.1f}%", "Jobless Rate", get_badge("Unemployment", unemp_val)),
+    ("Debt / GDP", f"{debt_val:.1f}%", "National Debt", get_badge("Debt / GDP", debt_val)),
+    ("Stability", f"{stab_val:.1f}", "Regime Stability", get_badge("Stability", stab_val)),
+    ("Approval", f"{supp_val:.1f}", "Public Support", get_badge("Approval", supp_val)),
+    ("Legitimacy", f"{leg_val:.1f}", "Mandate Level", get_badge("Legitimacy", leg_val)),
 ]
 
 m_cols = st.columns(4)
-for i, (label, value, caption) in enumerate(snapshot):
+for i, (label, value, caption, badge_cls) in enumerate(snapshot):
     with m_cols[i % 4]:
         st.markdown(f"""
         <div class="sc-card">
-            <div class="sc-card-title">{label}</div>
+            <div class="sc-card-title">{label} <span class="sc-badge {badge_cls}">●</span></div>
             <div class="sc-value">{value}</div>
             <div class="sc-caption">{caption}</div>
         </div>
         """, unsafe_allow_html=True)
+
+# Live News Ticker Section
+st.markdown('<div class="sc-section-header">📰 National News Ticker</div>', unsafe_allow_html=True)
+events_list = state.get("events", [])
+ticker_html = '<div class="sc-ticker">'
+if events_list:
+    for ev in reversed(events_list[-4:]): # Show last 4 headlines
+        ticker_html += f"<div><b>[{ev['year']}] {ev['title']}</b>: {ev['description']}</div><br>"
+else:
+    ticker_html += "<div>No major events recorded yet. The nation is stable.</div>"
+ticker_html += '</div>'
+st.markdown(ticker_html, unsafe_allow_html=True)
 
 # 3. Charts & Analytics Section
 st.markdown('<div class="sc-section-header">📈 Macroeconomic Trends</div>', unsafe_allow_html=True)
@@ -337,7 +415,7 @@ tabs = st.tabs([
     "🗳️ Politics",
     "🗺️ Regions",
     "🌍 Foreign & Rivals",
-    "⚠️️ Situations",
+    "⚠️ Situations",
     "📜 History"
 ])
 
@@ -368,7 +446,7 @@ with tabs[3]:
     st.dataframe(parties_df.round(1), use_container_width=True)
 
 with tabs[4]:
-    st.header("🗺️️ Regional Politics & Unrest")
+    st.header("🗺️ Regional Politics & Unrest")
     regions_df = pd.DataFrame(state["regions"]).T
     st.dataframe(regions_df.round(1), use_container_width=True)
 
