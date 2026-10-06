@@ -117,7 +117,7 @@ if "game" not in st.session_state:
 # ==========================================================
 
 if st.session_state.game is None:
-    st.title("🏛️️ STATECRAFT")
+    st.title("🏛 STATECRAFT")
     st.subheader("Build a country. Shape its institutions. Survive its history.")
     st.divider()
 
@@ -268,7 +268,7 @@ for i, (label, value, caption) in enumerate(snapshot):
         </div>
         """, unsafe_allow_html=True)
 
-# 3. Charts & Analytics Section (Clean Side-by-Side)
+# 3. Charts & Analytics Section
 st.markdown('<div class="sc-section-header">📈 Macroeconomic Trends</div>', unsafe_allow_html=True)
 history = pd.DataFrame(state["history"])
 if not history.empty:
@@ -282,7 +282,7 @@ if not history.empty:
         fig_inf.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", margin=dict(l=10, r=10, t=40, b=10), legend_title_text="")
         st.plotly_chart(fig_inf, use_container_width=True)
 
-# 4. Streamlined Executive Actions Bar
+# 4. Executive Actions Bar
 st.markdown('<div class="sc-section-header">🎯 Executive Policy Deck</div>', unsafe_allow_html=True)
 act_col1, act_col2 = st.columns([3, 1], gap="medium")
 with act_col1:
@@ -292,35 +292,85 @@ with act_col2:
         apply_policy(game, policy_name)
         st.rerun()
 
-# 5. Expandable Detailed Records (Keeping the Main UI Clean)
-st.markdown('<div class="sc-section-header">📂 Detailed State Analytics</div>', unsafe_allow_html=True)
+# 5. Full Detailed Records Tabs (Restored!)
+st.markdown('<div class="sc-section-header">📚 Detailed State Records</div>', unsafe_allow_html=True)
+tabs = st.tabs([
+    "🏛 Government",
+    "📈 Economy",
+    "👥 Society & Factions",
+    "🗳️ Politics",
+    "🗺️ Regions",
+    "🌍 Foreign & Rivals",
+    "⚠️ Situations",
+    "📜 History"
+])
 
-with st.expander("📊 View Factional Social Groups & Public Approval"):
+with tabs[0]:
+    st.header(game["government"]["name"])
+    st.write(game["government"]["description"])
+    st.divider()
+    for key, value in game["government_config"].items():
+        st.write(f"**{key}:** {value}")
+
+with tabs[1]:
+    st.header("📈 Economic Parameters")
+    st.write(f"**Economic System:** {game['economy']}")
+    st.write(f"**Interest Rate:** {metrics['interest_rate']:.1f}%")
+    st.write(f"**Currency Strength:** {metrics['currency_strength']:.1f}")
+    st.write(f"**Foreign Direct Investment (FDI):** {metrics['fdi']:.1f}")
+    st.write(f"**Reserves:** {metrics['reserves']:.1f}")
+
+with tabs[2]:
+    st.header("👥 Factional Social Groups")
+    st.caption("Track group approvals, wealth shares, and radicalization metrics.")
     groups_df = pd.DataFrame(state["groups"]).T
     st.dataframe(groups_df.round(1), use_container_width=True)
 
-with st.expander("⚔️ View Neighboring Rival Nations & Threats"):
+with tabs[3]:
+    st.header("🗳️ Political System & Parties")
+    parties_df = pd.DataFrame(state["parties"]).T
+    st.dataframe(parties_df.round(1), use_container_width=True)
+
+with tabs[4]:
+    st.header("🗺️ Regional Politics & Unrest")
+    regions_df = pd.DataFrame(state["regions"]).T
+    st.dataframe(regions_df.round(1), use_container_width=True)
+
+with tabs[5]:
+    st.header("🌍 Foreign Affairs & Rival Nations")
+    st.write(f"**Diplomacy:** {metrics['diplomacy']:.1f}")
+    st.write(f"**Trade Openness:** {metrics['trade_openness']:.1f}")
+    st.write(f"**Military Readiness:** {metrics['military_readiness']:.1f}")
+    st.write(f"**International Tension:** {metrics['international_tension']:.1f}")
+    st.divider()
+    st.subheader("Neighboring Rivals")
     rivals_df = pd.DataFrame(state.get("rivals", []))
     if not rivals_df.empty:
         st.dataframe(rivals_df, use_container_width=True, hide_index=True)
     else:
-        st.info("No rival states registered.")
+        st.info("No active rival states.")
 
-with st.expander("🗺️ View Regional Unrest & Stability"):
-    regions_df = pd.DataFrame(state["regions"]).T
-    st.dataframe(regions_df.round(1), use_container_width=True)
+with tabs[6]:
+    st.header("⚠️ Current Situations & Crises")
+    situations = state.get("situations", [])
+    if situations:
+        for situation in reversed(situations):
+            st.warning(situation)
+    else:
+        st.success("No active national crises.")
 
-with st.expander("📜 View Historical Log & Past Events"):
-    for ev in reversed(state["events"]):
-        st.markdown(f"**{ev['year']} — {ev['title']}**")
-        st.caption(ev["description"])
+with tabs[7]:
+    st.header("📜 Historical Log")
+    for event in reversed(state["events"]):
+        st.markdown(f"### {event['year']} — {event['title']}")
+        st.write(event["description"])
         st.divider()
 
 # 6. Turn Advancement Dock
 st.markdown("<br>", unsafe_allow_html=True)
 if state.get("active_dilemma") is not None:
-    st.warning("⚠️ You must resolve the active crisis dilemma before advancing history.")
+    st.warning("⚠️ You must resolve the active crisis dilemma above before advancing history to the next turn!")
 else:
-    if st.button("⏩ ADVANCE TO NEXT TURN", type="primary", use_container_width=True):
+    if st.button("⏩ END TURN — ADVANCE HISTORY", type="primary", use_container_width=True):
         advance_turn(game)
         st.rerun()
