@@ -363,7 +363,7 @@ for i, (label, value, caption, badge_cls) in enumerate(snapshot):
 # 3. DYNAMIC ERA-BASED NEWS TICKER & WIRE (ROBUST CHECK)
 current_era_name = game.get("era", "")
 
-if "Antiquity" in current_era_name:
+if "Antiquity" in current_era_name or "Ancient" in current_era_name:
     ticker_title = "🏛️ Imperial Scroll & Royal Decrees"
 elif "Middle Ages" in current_era_name or "Feudalism" in current_era_name:
     ticker_title = "📜 Chronicles & Monastic Broadsheets"
@@ -472,7 +472,7 @@ tabs = st.tabs([
     "📈 Economy",
     "👥 Society & Factions",
     "🗳️ Politics",
-    "🗺️️ Regions",
+    "🗺️ Regions",
     "🌍 Foreign & Rivals",
     "⚠️ Situations",
     "📜 History"
