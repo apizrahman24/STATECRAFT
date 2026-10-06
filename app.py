@@ -486,13 +486,30 @@ if state.get("active_dilemma") is not None:
     st.warning("⚠️ You must resolve the active crisis dilemma above before advancing history!")
 else:
     if st.button(f"⏩ ADVANCE TIME ({game['time_scale']})", type="primary", use_container_width=True):
-        # Safe construction using explicit keyword arguments to avoid parameter-order or out-of-range errors
-        current_date = datetime.date(year=state["year"], month=state["month"], day=state["day"])
-        new_date = current_date + datetime.timedelta(days=days_per_turn)
+        # Safe addition that works with BCE/ancient years as well as CE years
+        total_days = state["day"] + days_per_turn
         
-        state["year"] = new_date.year
-        state["month"] = new_date.month
-        state["day"] = new_date.day
+        if days_per_turn == 365:
+            # 1 Year increment
+            state["year"] += 1
+        elif days_per_turn == 30:
+            # 1 Month increment
+            state["month"] += 1
+            if state["month"] > 12:
+                state["month"] = 1
+                state["year"] += 1
+        else:
+            # Daily increment
+            state["day"] = total_days
+            while state["day"] > 30: # Simplified monthly rollover
+                state["day"] -= 30
+                state["month"] += 1
+                if state["month"] > 12:
+                    state["month"] = 1
+                    state["year"] += 1
+
+        advance_turn(game)
+        st.rerun()
         
         advance_turn(game)
         st.rerun()
