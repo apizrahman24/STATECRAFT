@@ -68,15 +68,15 @@ ERA_EVENT_POOLS = {
 
 def trigger_era_event(state, game):
     era_name = game.get("era", "Ancient Era")
-    # Fallback pool if exact era isn't found
+    # Fallback to Ancient Era if the exact text key isn't found
     pool = ERA_EVENT_POOLS.get(era_name, ERA_EVENT_POOLS["Ancient Era"])
     
-    # 35% chance to trigger a major active dilemma if none exists
+    # 35% chance to trigger an active dilemma if one isn't already active
     if not state.get("active_dilemma") and random.random() < 0.35 and pool["dilemmas"]:
         dilemma = random.choice(pool["dilemmas"])
         state["active_dilemma"] = dilemma
     
-    # Standard event pull
+    # Pull a standard flavor event
     event_template = random.choice(pool["events"])
     new_event = {
         "year": state["year"],
@@ -104,7 +104,7 @@ def resolve_dilemma(state, choice_idx):
         if k in metrics:
             metrics[k] += v
             
-    # Log choice into historical events
+    # Record choice into historical events log
     state["events"].append({
         "year": state["year"],
         "title": f"Resolved: {dilemma['title']}",
