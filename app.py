@@ -21,7 +21,7 @@ from engine.events import resolve_dilemma
 
 st.set_page_config(
     page_title="STATECRAFT",
-    page_icon="🏛️️",
+    page_icon="🏛",
     layout="wide"
 )
 
@@ -150,7 +150,7 @@ if st.session_state.game is None:
             government_config[setting] = st.selectbox(setting, options)
 
     with col2:
-        st.markdown("### ⚙️️ Identity & Conditions")
+        st.markdown("### ⚙️ Identity & Conditions")
         country_name = st.text_input("Country Name", "Republic of Novara")
         leader = st.text_input("Leader Name", selected["leader"])
 
@@ -164,6 +164,14 @@ if st.session_state.game is None:
         scenario = st.selectbox("Starting Scenario", era["scenarios"])
         crisis = st.selectbox("Initial Crisis", era["crises"])
 
+        st.markdown("### ⏱️ Campaign Game Speed (Permanent)")
+        speed_choices = {
+            "1 Day (Micro / Crisis)": 1,
+            "1 Month (Tactical)": 30,
+            "1 Year (Strategic)": 365
+        }
+        chosen_speed_label = st.selectbox("Time Increment Per Turn", list(speed_choices.keys()), index=2)
+
     st.divider()
     if st.button("🚀 INITIALIZE NATION", type="primary", use_container_width=True):
         game_obj = create_game(
@@ -171,10 +179,12 @@ if st.session_state.game is None:
             economy, territory, ideology, technology, society, foreign_position,
             scenario, crisis, leader
         )
-        # Initialize temporal tracking fields
+        # Store fixed time settings
         game_obj["state"]["month"] = 1
         game_obj["state"]["day"] = 1
-        game_obj["time_scale"] = "1 Year (Strategic)"
+        game_obj["time_scale"] = chosen_speed_label
+        game_obj["days_per_turn"] = speed_choices[chosen_speed_label]
+        
         st.session_state.game = game_obj
         st.rerun()
     st.stop()
@@ -188,13 +198,17 @@ game = st.session_state.game
 state = game["state"]
 metrics = state["metrics"]
 
-# Ensure date fields exist for backward compatibility with older saves
+# Fallbacks for older save compatibility
 if "month" not in state:
     state["month"] = 1
 if "day" not in state:
     state["day"] = 1
 if "time_scale" not in game:
     game["time_scale"] = "1 Year (Strategic)"
+if "days_per_turn" not in game:
+    game["days_per_turn"] = 365
+
+days_per_turn = game["days_per_turn"]
 
 
 # ==========================================================
@@ -206,25 +220,13 @@ with st.sidebar:
     st.markdown(f"### {game['country_name']}")
     st.caption(f"Era: {game['era']}")
     
-    # Display formatted date string
     current_date_str = f"📅 {state['day']} / {state['month']} / {state['year']}"
     st.markdown(f"**{current_date_str}**")
     st.write(f"🔄 **Turn:** {state['turn']}")
     
     st.divider()
-    st.markdown("### ⏱️ Game Speed")
-    speed_options = {
-        "1 Day (Micro / Crisis)": 1,
-        "1 Month (Tactical)": 30,
-        "1 Year (Strategic)": 365
-    }
-    selected_speed_label = st.selectbox(
-        "Turn Time Increment", 
-        list(speed_options.keys()), 
-        index=list(speed_options.keys()).index(game.get("time_scale", "1 Year (Strategic)"))
-    )
-    game["time_scale"] = selected_speed_label
-    days_per_turn = speed_options[selected_speed_label]
+    st.markdown("### ⏱️ Campaign Speed")
+    st.info(f"Locked Speed: **{game['time_scale']}**")
 
     st.divider()
     st.write(f"**Government:** {game['government']['name']}")
@@ -253,7 +255,7 @@ current_date_display = f"{state['day']:02d}/{state['month']:02d}/{state['year']}
 st.markdown(f"""
 <div class="sc-hero">
     <div class="sc-kicker">Strategic Command • Turn {state["turn"]} • Date: {current_date_display}</div>
-    <div class="sc-title">🏛️️ {game["country_name"]}</div>
+    <div class="sc-title">🏛️ {game["country_name"]}</div>
     <div class="sc-subtitle">
         {game["era"]} &nbsp;•&nbsp; {game["government"]["name"]} &nbsp;•&nbsp; Speed: {game['time_scale']}
     </div>
@@ -335,7 +337,7 @@ tabs = st.tabs([
     "🗳️ Politics",
     "🗺️ Regions",
     "🌍 Foreign & Rivals",
-    "⚠️ Situations",
+    "⚠️️ Situations",
     "📜 History"
 ])
 
@@ -400,13 +402,12 @@ with tabs[7]:
         st.write(event["description"])
         st.divider()
 
-# 6. Turn Advancement Dock with Date Advancement Logic
+# 6. Turn Advancement Dock
 st.markdown("<br>", unsafe_allow_html=True)
 if state.get("active_dilemma") is not None:
     st.warning("⚠️ You must resolve the active crisis dilemma above before advancing history!")
 else:
-    if st.button(f"⏩ ADVANCE TIME ({selected_speed_label.split(' ')[0]} {selected_speed_label.split(' ')[1]})", type="primary", use_container_width=True):
-        # Calculate calendar increment
+    if st.button(f"⏩ ADVANCE TIME ({game['time_scale']})", type="primary", use_container_width=True):
         current_date = datetime.date(state["year"], state["month"], state["day"])
         new_date = current_date + datetime.timedelta(days=days_per_turn)
         
@@ -414,6 +415,5 @@ else:
         state["month"] = new_date.month
         state["day"] = new_date.day
         
-        # Call the core turn progression engine
         advance_turn(game)
         st.rerun()
