@@ -16,7 +16,7 @@ from engine.events import resolve_dilemma
 
 
 # ==========================================================
-# CONFIG
+# CONFIG & THEME
 # ==========================================================
 
 st.set_page_config(
@@ -25,102 +25,81 @@ st.set_page_config(
     layout="wide"
 )
 
-# ==========================================================
-# VISUAL THEME — STATECRAFT COMMAND UI
-# ==========================================================
 st.markdown("""
 <style>
 .stApp {
     background:
-        radial-gradient(circle at 85% 0%, rgba(214,179,106,.08), transparent 28%),
-        linear-gradient(180deg, #0b1017 0%, #0d131c 100%);
+        radial-gradient(circle at 85% 0%, rgba(214,179,106,.06), transparent 30%),
+        linear-gradient(180deg, #090d12 0%, #0e1520 100%);
 }
 [data-testid="stSidebar"] {
-    background: #0a0f15;
-    border-right: 1px solid #263444;
+    background: #070a0f;
+    border-right: 1px solid #1e293b;
 }
 .block-container {
-    padding-top: 1.6rem;
+    padding-top: 1.5rem;
     padding-bottom: 3rem;
-    max-width: 1500px;
+    max-width: 1450px;
 }
 .sc-hero {
-    padding: 1.35rem 1.5rem;
-    border: 1px solid #263444;
-    border-radius: 16px;
-    background: linear-gradient(135deg, rgba(17,25,35,.98), rgba(20,30,42,.92));
-    margin-bottom: 1rem;
-    box-shadow: 0 12px 30px rgba(0,0,0,.18);
+    padding: 1.5rem 1.8rem;
+    border: 1px solid #1e293b;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.85));
+    margin-bottom: 1.5rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
 }
 .sc-kicker {
-    color: #d6b36a;
+    color: #e2b764;
     text-transform: uppercase;
-    font-size: .72rem;
-    letter-spacing: .16em;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
     font-weight: 700;
 }
-.sc-title { font-size: 2rem; font-weight: 800; line-height: 1.05; }
-.sc-subtitle { color: #8f9dad; margin-top: .35rem; font-size: .92rem; }
+.sc-title { font-size: 2.1rem; font-weight: 800; line-height: 1.1; color: #f8fafc; }
+.sc-subtitle { color: #94a3b8; margin-top: 0.4rem; font-size: 0.95rem; }
+
 .sc-card {
-    background: linear-gradient(180deg, rgba(17,25,35,.98), rgba(14,21,29,.98));
-    border: 1px solid #263444;
-    border-radius: 14px;
-    padding: 1rem 1.05rem;
-    min-height: 105px;
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid #1e293b;
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    margin-bottom: 0.5rem;
 }
 .sc-card-title {
-    color: #8f9dad;
-    font-size: .73rem;
+    color: #94a3b8;
+    font-size: 0.7rem;
     text-transform: uppercase;
-    letter-spacing: .10em;
+    letter-spacing: 0.12em;
     font-weight: 700;
 }
-.sc-value { font-size: 1.45rem; font-weight: 800; margin-top: .28rem; }
-.sc-caption { color: #8f9dad; font-size: .78rem; margin-top: .2rem; }
-.sc-section {
-    margin-top: 1.15rem;
-    margin-bottom: .55rem;
-    font-size: 1rem;
+.sc-value { font-size: 1.4rem; font-weight: 800; margin-top: 0.2rem; color: #f1f5f9; }
+.sc-caption { color: #64748b; font-size: 0.75rem; margin-top: 0.1rem; }
+
+.sc-section-header {
+    font-size: 1.1rem;
     font-weight: 750;
-}
-.sc-panel {
-    border: 1px solid #263444;
-    border-radius: 14px;
-    background: rgba(17,25,35,.9);
-    padding: 1rem 1.1rem;
+    color: #e2e8f0;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid #1e293b;
+    padding-bottom: 0.3rem;
 }
 .sc-alert {
-    border-left: 4px solid #e56b6f;
-    background: linear-gradient(90deg, rgba(229,107,111,.12), rgba(17,25,35,.85));
-    border-radius: 12px;
-    padding: .9rem 1rem;
-    margin-bottom: .65rem;
+    border-left: 4px solid #ef4444;
+    background: linear-gradient(90deg, rgba(239,68,68,0.1), rgba(15,23,42,0.9));
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.75rem;
 }
-.sc-alert-title { font-weight: 800; font-size: .95rem; }
-.sc-alert-body { color: #8f9dad; font-size: .82rem; margin-top: .22rem; }
-.sc-news { border-bottom: 1px solid #263444; padding: .7rem 0; }
-.sc-news:last-child { border-bottom: 0; }
-.sc-news-year { color: #d6b36a; font-size: .72rem; font-weight: 700; letter-spacing: .08em; }
-.sc-news-title { font-weight: 700; margin-top: .15rem; }
-.sc-news-body { color: #8f9dad; font-size: .8rem; margin-top: .15rem; }
-div[data-testid="stMetric"] {
-    background: rgba(17,25,35,.92);
-    border: 1px solid #263444;
-    padding: .85rem 1rem;
-    border-radius: 12px;
-}
-.stTabs [data-baseweb="tab-list"] { gap: .25rem; border-bottom: 1px solid #263444; }
+.stTabs [data-baseweb="tab-list"] { gap: 0.5rem; border-bottom: 1px solid #1e293b; }
 .stButton > button[kind="primary"] {
-    background: linear-gradient(135deg, #caa85f, #e0bd74);
-    color: #10151c;
+    background: linear-gradient(135deg, #d97706, #b45309);
+    color: #ffffff;
     border: none;
-    font-weight: 800;
+    font-weight: 700;
 }
-.stButton > button { border-radius: 9px; }
-@media (max-width: 900px) {
-    .sc-title { font-size: 1.55rem; }
-    .block-container { padding-left: .8rem; padding-right: .8rem; }
-}
+.stButton > button { border-radius: 8px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -134,95 +113,59 @@ if "game" not in st.session_state:
 
 
 # ==========================================================
-# COUNTRY CREATION
+# COUNTRY CREATION WIZARD
 # ==========================================================
 
 if st.session_state.game is None:
-    st.title("🏛️ STATECRAFT")
-    st.subheader(
-        "Build a country. Shape its institutions. "
-        "Survive its history."
-    )
+    st.title("🏛️️ STATECRAFT")
+    st.subheader("Build a country. Shape its institutions. Survive its history.")
     st.divider()
 
-    st.header("🌍 1. Historical Era")
-    era_name = st.selectbox("Historical Era", list(ERA_DATA.keys()))
-    era = ERA_DATA[era_name]
-
-    st.header("📅 2. Starting Period")
-    period_name = st.selectbox("Starting Period", list(era["periods"].keys()))
-    period_start, period_end = era["periods"][period_name]
-
-    st.header("🗓️️ 3. Starting Year")
-    year_mode = st.radio("Starting year", ["Early", "Middle", "Late", "Custom"], horizontal=True)
-    if year_mode == "Early":
-        year = period_start
-    elif year_mode == "Middle":
-        year = (period_start + period_end) // 2
-    elif year_mode == "Late":
-        year = period_end
-    else:
-        year = st.slider("Exact Year", period_start, period_end, period_start)
-
-    st.info(f"Starting year: **{year}**")
-
-    st.header("📜 4. Historical Mode")
-    historical_mode = st.radio("Historical plausibility", ["Strict Historical", "Historically Plausible", "Alternate History"], horizontal=True)
-
-    st.header("🏛️ 5. Government")
-    def government_availability(government):
-        gid = government["id"]
-        if year <= 300:
-            common = ["absolute_monarchy", "aristocratic_republic", "oligarchy", "city_state", "tribal_kingdom", "tribal_confederation", "theocracy", "military_government"]
-        elif year <= 1500:
-            common = ["absolute_monarchy", "aristocratic_republic", "oligarchy", "tribal_kingdom", "tribal_confederation", "theocracy", "military_government", "confederation", "collegial"]
-        elif year <= 1800:
-            common = ["absolute_monarchy", "constitutional_monarchy", "aristocratic_republic", "oligarchy", "theocracy", "military_government", "confederation", "colonial", "personalist"]
-        elif year <= 1900:
-            common = ["absolute_monarchy", "constitutional_monarchy", "parliamentary_republic", "presidential_republic", "aristocratic_republic", "military_government", "colonial", "confederation", "personalist"]
-        else:
-            common = ["constitutional_monarchy", "parliamentary_republic", "presidential_republic", "semi_presidential", "military_government", "one_party", "personalist", "technocracy", "theocracy", "direct_democracy", "revolutionary", "colonial", "hybrid"]
-        return "🟢 Common" if gid in common else "🟡 Unusual"
-
-    available = []
-    for government in GOVERNMENTS:
-        status = government_availability(government)
-        if historical_mode == "Strict Historical" and status == "🟡 Unusual":
-            continue
-        available.append(government)
-
-    selected = st.selectbox(
-        "Government Type",
-        available,
-        format_func=lambda g: f"{g['name']} {government_availability(g)}"
-    )
-    st.info(selected["description"])
-
-    st.subheader("⚙️️ Government Configuration")
-    government_config = {}
-    for setting, options in selected["configuration"].items():
-        government_config[setting] = st.selectbox(setting, options)
-
-    st.header("🌎 6. Country")
-    country_name = st.text_input("Country Name", "Republic of Novara")
-    leader = st.text_input("Leader", selected["leader"])
-
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns(2, gap="large")
     with col1:
+        st.markdown("### 🌍 Epoch & Government")
+        era_name = st.selectbox("Historical Era", list(ERA_DATA.keys()))
+        era = ERA_DATA[era_name]
+
+        period_name = st.selectbox("Starting Period", list(era["periods"].keys()))
+        period_start, period_end = era["periods"][period_name]
+
+        year_mode = st.radio("Starting Year Focus", ["Early", "Middle", "Late", "Custom"], horizontal=True)
+        if year_mode == "Early":
+            year = period_start
+        elif year_mode == "Middle":
+            year = (period_start + period_end) // 2
+        elif year_mode == "Late":
+            year = period_end
+        else:
+            year = st.slider("Exact Year", period_start, period_end, period_start)
+
+        historical_mode = st.radio("Plausibility Mode", ["Strict Historical", "Historically Plausible", "Alternate History"], horizontal=True)
+        
+        selected = st.selectbox("Government Type", GOVERNMENTS, format_func=lambda g: g['name'])
+        st.caption(selected["description"])
+
+        government_config = {}
+        for setting, options in selected["configuration"].items():
+            government_config[setting] = st.selectbox(setting, options)
+
+    with col2:
+        st.markdown("### ⚙️ Identity & Conditions")
+        country_name = st.text_input("Country Name", "Republic of Novara")
+        leader = st.text_input("Leader Name", selected["leader"])
+
         economy = st.selectbox("Economic System", era["economies"])
         territory = st.selectbox("Territorial Structure", era["territories"])
         ideology = st.selectbox("Political Philosophy", era["ideologies"])
-    with col2:
-        technology = st.selectbox("Technology", era["technology"])
+        technology = st.selectbox("Technology Level", era["technology"])
         society = st.selectbox("Social Structure", era["societies"])
-        foreign_position = st.selectbox("International Position", era["foreign_positions"])
+        foreign_position = st.selectbox("Foreign Policy Stance", era["foreign_positions"])
 
-    st.header("⚠️ 7. Starting Conditions")
-    scenario = st.selectbox("Starting Scenario", era["scenarios"])
-    crisis = st.selectbox("Initial Crisis", era["crises"])
+        scenario = st.selectbox("Starting Scenario", era["scenarios"])
+        crisis = st.selectbox("Initial Crisis", era["crises"])
 
     st.divider()
-    if st.button("🚀 CREATE COUNTRY", type="primary", use_container_width=True):
+    if st.button("🚀 INITIALIZE NATION", type="primary", use_container_width=True):
         st.session_state.game = create_game(
             country_name, year, historical_mode, selected, government_config,
             economy, territory, ideology, technology, society, foreign_position,
@@ -233,7 +176,7 @@ if st.session_state.game is None:
 
 
 # ==========================================================
-# ACTIVE GAME
+# ACTIVE GAME RUNTIME
 # ==========================================================
 
 game = st.session_state.game
@@ -242,81 +185,81 @@ metrics = state["metrics"]
 
 
 # ==========================================================
-# SIDEBAR
+# SIDEBAR COMMAND CENTER
 # ==========================================================
 
 with st.sidebar:
     st.title("🏛️ STATECRAFT")
-    st.write(f"### {game['country_name']}")
-    st.write(f"Year: **{state['year']}**")
-    st.write(f"Turn: **{state['turn']}**")
+    st.markdown(f"### {game['country_name']}")
+    st.caption(f"Era: {game['era']}")
+    st.write(f"📅 **Year:** {state['year']} &nbsp;|&nbsp; 🔄 **Turn:** {state['turn']}")
     st.divider()
     st.write(f"**Government:** {game['government']['name']}")
-    st.write(f"**Territory:** {game['territory']}")
     st.write(f"**Leader:** {game['leader']}")
     st.divider()
 
-    if st.button("🔄 New Country"):
+    if st.button("🔄 Abandon / New Country", use_container_width=True):
         st.session_state.game = None
         st.rerun()
 
     save_data = json.dumps(game, indent=4)
     st.download_button(
-        "💾 Save Game",
+        "💾 Export Save File",
         save_data,
         file_name="statecraft_save.json",
-        mime="application/json"
+        mime="application/json",
+        use_container_width=True
     )
 
 
 # ==========================================================
-# NATIONAL COMMAND DASHBOARD
+# MAIN DASHBOARD VIEW
 # ==========================================================
 
 st.markdown(f"""
 <div class="sc-hero">
-    <div class="sc-kicker">National Command Dashboard • Turn {state["turn"]}</div>
+    <div class="sc-kicker">Strategic Command • Turn {state["turn"]}</div>
     <div class="sc-title">🏛️ {game["country_name"]}</div>
     <div class="sc-subtitle">
-        {game["era"]} • {game["period"]} • {state["year"]}
-        &nbsp;|&nbsp; {game["government"]["name"]}
-        &nbsp;|&nbsp; {game["territory"]}
-        &nbsp;|&nbsp; {game["leader"]}
+        {game["era"]} ({state["year"]}) &nbsp;•&nbsp; {game["government"]["name"]} &nbsp;•&nbsp; {game["territory"]}
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# Active Crisis / Interactive Dilemma Prompt Block
+# 1. Active Crisis Dilemma Prompt Banner (If Triggered)
 active_dilemma = state.get("active_dilemma")
 if active_dilemma:
     st.markdown(f"""
-    <div class="sc-alert" style="border-left-color: #f39c12; background: linear-gradient(90deg, rgba(243,156,18,.15), rgba(17,25,35,.9));">
-        <div class="sc-alert-title" style="color: #f39c12;">⚡ ACTIVE CRISIS DILEMMA: {active_dilemma["title"]}</div>
-        <div class="sc-alert-body" style="font-size: .9rem; margin-top: .4rem;">{active_dilemma["description"]}</div>
+    <div class="sc-alert">
+        <div style="font-weight: 800; font-size: 1.05rem; color: #f87171;">⚡ CRITICAL DILEMMA: {active_dilemma["title"]}</div>
+        <div style="color: #cbd5e1; font-size: 0.9rem; margin-top: 0.3rem;">{active_dilemma["description"]}</div>
     </div>
     """, unsafe_allow_html=True)
     
-    st.write("**Choose your administration's response:**")
-    for idx, choice in enumerate(active_dilemma["choices"]):
-        if st.button(f"👉 {choice['label']}", key=f"dilemma_choice_{idx}", use_container_width=True):
-            resolve_dilemma(state, idx)
-            st.rerun()
+    st.write("### Choose Executive Response:")
+    d_cols = st.columns(len(active_dilemma["choices"]))
+    for idx, (col, choice) in enumerate(zip(d_cols, active_dilemma["choices"])):
+        with col:
+            if st.button(f"👉 {choice['label']}", key=f"dilemma_btn_{idx}", use_container_width=True):
+                resolve_dilemma(state, idx)
+                st.rerun()
     st.divider()
 
-# National snapshot
+# 2. Key Metrics Overview Grid
 snapshot = [
-    ("GDP", f"{metrics['gdp']:.1f}", "Economic size"),
-    ("Growth", f"{metrics['growth']:.1f}%", "Annual growth"),
-    ("Inflation", f"{metrics['inflation']:.1f}%", "Price pressure"),
-    ("Unemployment", f"{metrics['unemployment']:.1f}%", "Labour market"),
-    ("Debt", f"{metrics['debt']:.1f}%", "Debt / GDP"),
-    ("Stability", f"{metrics['government_stability']:.1f}", "Government stability"),
-    ("Approval", f"{metrics['public_support']:.1f}", "Public support"),
-    ("Legitimacy", f"{metrics['legitimacy']:.1f}", "Political legitimacy"),
+    ("GDP", f"{metrics['gdp']:.1f}", "Total Output"),
+    ("Growth", f"{metrics['growth']:.1f}%", "Annual Rate"),
+    ("Inflation", f"{metrics['inflation']:.1f}%", "Price Index"),
+    ("Unemployment", f"{metrics['unemployment']:.1f}%", "Jobless Rate"),
+    ("Debt / GDP", f"{metrics['debt']:.1f}%", "National Debt"),
+    ("Stability", f"{metrics['government_stability']:.1f}", "Regime Stability"),
+    ("Approval", f"{metrics['public_support']:.1f}", "Public Support"),
+    ("Legitimacy", f"{metrics['legitimacy']:.1f}", "Mandate Level"),
 ]
-cols = st.columns(8)
-for col, (label, value, caption) in zip(cols, snapshot):
-    with col:
+
+m_cols = st.columns(4)
+for i, (label, value, caption) in enumerate(snapshot):
+    with m_cols[i % 4]:
         st.markdown(f"""
         <div class="sc-card">
             <div class="sc-card-title">{label}</div>
@@ -325,160 +268,59 @@ for col, (label, value, caption) in zip(cols, snapshot):
         </div>
         """, unsafe_allow_html=True)
 
-# Situation + political health
-st.markdown('<div class="sc-section">⚠️ National Situation & Factions</div>', unsafe_allow_html=True)
-left, right = st.columns([1.35, 1], gap="large")
-
-with left:
-    situations = state.get("situations", [])
-    if situations:
-        for situation in reversed(situations[-3:]):
-            st.markdown(f"""
-            <div class="sc-alert">
-                <div class="sc-alert-title">🔴 {situation}</div>
-                <div class="sc-alert-body">
-                    Active pressure point affecting national stability.
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-    else:
-        st.success("No major active national crises.")
-
-with right:
-    st.markdown('<div class="sc-panel"><div class="sc-card-title">Political Health</div>', unsafe_allow_html=True)
-    pc1, pc2 = st.columns(2)
-    pc1.metric("Government Stability", f"{metrics['government_stability']:.1f}")
-    pc2.metric("Legitimacy", f"{metrics['legitimacy']:.1f}")
-    pc1.metric("Protest Risk", f"{metrics['protest_risk']:.1f}")
-    pc2.metric("Election Risk", f"{metrics['election_risk']:.1f}")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# Performance charts
-st.markdown('<div class="sc-section">📊 National Performance</div>', unsafe_allow_html=True)
+# 3. Charts & Analytics Section (Clean Side-by-Side)
+st.markdown('<div class="sc-section-header">📈 Macroeconomic Trends</div>', unsafe_allow_html=True)
 history = pd.DataFrame(state["history"])
 if not history.empty:
-    chart_col1, chart_col2 = st.columns(2, gap="large")
-    with chart_col1:
-        chart = px.line(history, x="year", y=["gdp", "debt"], markers=True, title="Economy & Fiscal Position")
-        chart.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", margin=dict(l=10, r=10, t=45, b=10), legend_title_text="")
-        st.plotly_chart(chart, use_container_width=True)
-    with chart_col2:
-        chart2 = px.line(history, x="year", y=["inflation", "unemployment"], markers=True, title="Inflation & Unemployment")
-        chart2.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", margin=dict(l=10, r=10, t=45, b=10), legend_title_text="")
-        st.plotly_chart(chart2, use_container_width=True)
+    ch1, ch2 = st.columns(2, gap="large")
+    with ch1:
+        fig_econ = px.line(history, x="year", y=["gdp", "debt"], markers=True, title="GDP vs. National Debt")
+        fig_econ.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", margin=dict(l=10, r=10, t=40, b=10), legend_title_text="")
+        st.plotly_chart(fig_econ, use_container_width=True)
+    with ch2:
+        fig_inf = px.line(history, x="year", y=["inflation", "unemployment"], markers=True, title="Inflation vs. Unemployment")
+        fig_inf.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", margin=dict(l=10, r=10, t=40, b=10), legend_title_text="")
+        st.plotly_chart(fig_inf, use_container_width=True)
 
-# Four strategic panels including Rivals
-st.markdown('<div class="sc-section">🌍 State Overview & Geopolitics</div>', unsafe_allow_html=True)
-ov1, ov2, ov3, ov4 = st.columns(4)
-
-with ov1:
-    st.markdown('<div class="sc-panel"><b>💰 Economy</b>', unsafe_allow_html=True)
-    st.write(f"**Interest rate:** {metrics['interest_rate']:.1f}%")
-    st.write(f"**Currency strength:** {metrics['currency_strength']:.1f}")
-    st.write(f"**FDI:** {metrics['fdi']:.1f}")
-    st.write(f"**Reserves:** {metrics['reserves']:.1f}")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-with ov2:
-    st.markdown('<div class="sc-panel"><b>👥 Factions</b>', unsafe_allow_html=True)
-    groups = state.get("groups", {})
-    if groups:
-        for gname, gdata in list(groups.items())[:3]:
-            st.write(f"**{gname}:** App {gdata['approval']:.0f} | Rad {gdata['radicalism']:.0f}")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-with ov3:
-    st.markdown('<div class="sc-panel"><b>⚔️ Rival Powers</b>', unsafe_allow_html=True)
-    rivals = state.get("rivals", [])
-    if rivals:
-        for r in rivals:
-            st.write(f"**{r['name']}**")
-            st.write(f"Rel: {r['relation']} | Stance: {r['stance']}")
-    else:
-        st.write("No major regional rivals.")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-with ov4:
-    st.markdown('<div class="sc-panel"><b>🌐 Foreign Affairs</b>', unsafe_allow_html=True)
-    st.write(f"**Diplomacy:** {metrics['diplomacy']:.1f}")
-    st.write(f"**Trade openness:** {metrics['trade_openness']:.1f}")
-    st.write(f"**Military readiness:** {metrics['military_readiness']:.1f}")
-    st.write(f"**International tension:** {metrics['international_tension']:.1f}")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# Executive Decisions
-st.markdown('<div class="sc-section">🎯 Executive Decisions</div>', unsafe_allow_html=True)
-action_col1, action_col2 = st.columns([2, 1])
-with action_col1:
-    policy_name = st.selectbox("Choose a policy", list(POLICIES.keys()), key="dashboard_policy")
-with action_col2:
-    st.write("")
-    st.write("")
-    if st.button("⚡ IMPLEMENT POLICY", type="primary", use_container_width=True):
+# 4. Streamlined Executive Actions Bar
+st.markdown('<div class="sc-section-header">🎯 Executive Policy Deck</div>', unsafe_allow_html=True)
+act_col1, act_col2 = st.columns([3, 1], gap="medium")
+with act_col1:
+    policy_name = st.selectbox("Select State Policy", list(POLICIES.keys()), label_visibility="collapsed")
+with act_col2:
+    if st.button("⚡ EXECUTE POLICY", type="primary", use_container_width=True):
         apply_policy(game, policy_name)
         st.rerun()
 
-# Detailed records tabs
-st.markdown('<div class="sc-section">📚 Detailed State Records</div>', unsafe_allow_html=True)
-tabs = st.tabs([
-    "🏛️️ Government",
-    "📈 Economy",
-    "👥 Society & Factions",
-    "🗳️ Politics",
-    "🗺️ Regions",
-    "🌍 Foreign & Rivals",
-    "⚠️ Situations",
-    "📜 History"
-])
+# 5. Expandable Detailed Records (Keeping the Main UI Clean)
+st.markdown('<div class="sc-section-header">📂 Detailed State Analytics</div>', unsafe_allow_html=True)
 
-with tabs[0]:
-    st.header(game["government"]["name"])
-    st.write(game["government"]["description"])
-    for key, value in game["government_config"].items():
-        st.write(f"**{key}:** {value}")
-
-with tabs[1]:
-    st.header("📈 Economy")
-    st.write(f"**Economic System:** {game['economy']}")
-
-with tabs[2]:
-    st.header("👥 Factional Social Groups")
+with st.expander("📊 View Factional Social Groups & Public Approval"):
     groups_df = pd.DataFrame(state["groups"]).T
     st.dataframe(groups_df.round(1), use_container_width=True)
 
-with tabs[3]:
-    st.header("🗳️ Political System")
-    parties_df = pd.DataFrame(state["parties"]).T
-    st.dataframe(parties_df.round(1), use_container_width=True)
-
-with tabs[4]:
-    st.header("🗺️ Regional Politics")
-    regions_df = pd.DataFrame(state["regions"]).T
-    st.dataframe(regions_df.round(1), use_container_width=True)
-
-with tabs[5]:
-    st.header("🌍 Foreign Affairs & Rival Nations")
+with st.expander("⚔️ View Neighboring Rival Nations & Threats"):
     rivals_df = pd.DataFrame(state.get("rivals", []))
     if not rivals_df.empty:
         st.dataframe(rivals_df, use_container_width=True, hide_index=True)
+    else:
+        st.info("No rival states registered.")
 
-with tabs[6]:
-    st.header("⚠️ Current Situations")
-    for situation in reversed(state["situations"]):
-        st.warning(situation)
+with st.expander("🗺️ View Regional Unrest & Stability"):
+    regions_df = pd.DataFrame(state["regions"]).T
+    st.dataframe(regions_df.round(1), use_container_width=True)
 
-with tabs[7]:
-    st.header("📜 Historical Record")
-    for event in reversed(state["events"]):
-        st.markdown(f"### {event['year']} — {event['title']}")
-        st.write(event["description"])
+with st.expander("📜 View Historical Log & Past Events"):
+    for ev in reversed(state["events"]):
+        st.markdown(f"**{ev['year']} — {ev['title']}**")
+        st.caption(ev["description"])
+        st.divider()
 
-# End turn
-st.divider()
-st.markdown('<div class="sc-section">⏳ Continue History</div>', unsafe_allow_html=True)
+# 6. Turn Advancement Dock
+st.markdown("<br>", unsafe_allow_html=True)
 if state.get("active_dilemma") is not None:
-    st.warning("⚠️ You must resolve the active crisis dilemma above before advancing history to the next turn!")
+    st.warning("⚠️ You must resolve the active crisis dilemma before advancing history.")
 else:
-    if st.button("⏩ END TURN — ADVANCE HISTORY", type="primary", use_container_width=True):
+    if st.button("⏩ ADVANCE TO NEXT TURN", type="primary", use_container_width=True):
         advance_turn(game)
         st.rerun()
